@@ -1,0 +1,110 @@
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Simple Chart</title>
+    <link rel="stylesheet" href="../simple-chart.css">
+    <link href="https://fonts.googleapis.com/css?family=Montserrat:300,400,600|Lato:300, 400i,700,700i" rel="stylesheet">
+    <style>
+        body { padding:100px; }
+        section { float:left; width:100%; }
+    </style>
+</head>
+<body>
+    <div class="sc-wrapper">
+        <section class="sc-section">
+            <div class="column-chart"></div>
+        </section>
+        <section class="sc-section">
+            <div class="bar-chart"></div>
+        </section>
+        <section class="sc-section">
+            <div class="step-chart"></div>
+        </section>
+        <section class="sc-section">
+            <div class="progress-chart"></div>
+        </section>
+        <section class="sc-section">
+            <div class="waterfall-chart"></div>
+        </section>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <script src="../simple-chart.js"></script>
+    <script>
+        //        Source: http://stackoverflow.com/questions/10599933/convert-long-number-into-abbreviated-string-in-javascript-with-a-special-shortn
+        function abbreviateNumber(arr) {
+            var newArr = [];
+            $.each(arr, function (index, value) {
+                var newValue = value;
+                if (value >= 1000) {
+                    var suffixes = [" ", " K", " mil", " bil", " t"];
+                    var suffixNum = Math.floor(("" + value).length / 3);
+                    var shortValue = '';
+                    for (var precision = 2; precision >= 1; precision--) {
+                        shortValue = parseFloat((suffixNum != 0 ? (value / Math.pow(1000, suffixNum) ) : value).toPrecision(precision));
+                        var dotLessShortValue = (shortValue + '').replace(/[^a-zA-Z 0-9]+/g, '');
+                        if (dotLessShortValue.length <= 2) {
+                            break;
+                        }
+                    }
+                    if (shortValue % 1 != 0)  shortNum = shortValue.toFixed(1);
+                    newValue = shortValue + suffixes[suffixNum];
+                }
+                newArr[index] = newValue;
+            });
+
+            console.log(newArr);
+            return newArr;
+        }
+
+        var labels = ["Avatar", "Titanic", "Star Wars: The Force Awakens", "Jurassic World", "Marvel's: The Avengers", "Furious 7", "Avengers: Age of Ultron", "Harry Potter and the Deathly Hallows Part 2", "Frozen", "Iron Man 3"];
+        var values = ["2787965087", "2186772302", "2068223624", "1670400637", "1518812988", "1516045911", "1405403694", "1341511219", "1276480335", "1214811252"];
+        var outputValues = abbreviateNumber(values);
+
+        $('.column-chart').simpleChart({
+            title: {
+                text: 'All Time Box Office - Top 10 Worldwide Grosses',
+                align: 'center'
+            },
+            type: 'column',
+            layout: {
+                width: '500px',
+                height: '400px'
+            },
+            item: {
+                label: labels,
+                value: values,
+                outputValue: outputValues,
+                color: ['#00aeef'],
+                prefix: '$',
+                suffix: '',
+                render: {
+                    margin: 0
+                }
+            }
+        });
+
+        $('.bar-chart').simpleChart({
+            title: {
+                text: 'All Time Box Office - Top 10 Worldwide Grosses',
+                align: 'center'
+            },
+            type: 'waterfall',
+            layout: {
+                width: '100%',
+                height: '400px'
+            },
+            item: {
+                label: labels,
+                value: values,
+                outputValue: outputValues,
+                color: ['#00aeef'],
+                prefix: '$',
+                suffix: '',
+                render: {
+                    margin: 0
+                }
+            }
+        })
+    </script>
+</body>
+</html>
