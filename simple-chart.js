@@ -11,9 +11,9 @@
                 height: '300px' /* String value: in px or percentage */
             },
             item: {
-                label: ['First Label'],
-                value: [15],
-                outputValue: [], // Optimized values: instead of 10240 bytes you can output 10kb
+                label: ['First Label'], // string
+                value: [15], //integer
+                outputValue: [], // Optimized values: instead of 10240 bytes you can output 10kb if you provide the array
                 color: ['#333'],
                 prefix: '',
                 suffix: '',
@@ -84,7 +84,7 @@
             for (i = 0; i < config.item.value.length; i++) {
                 itemHeight.push(config.item.value[i] * 100 / nominator);
             }
-
+            console.log(config.item.value[i] * 100 / nominator);
             return itemHeight;
         }
 
@@ -94,6 +94,24 @@
         template += '<div class="sc-canvas">';
 
         var itemWidth, itemHeight, itemPercentage;
+
+        if (config.type == 'bar') {
+            itemWidth = setItemSize();
+            for (i = 0; i < config.item.value.length; i++) {
+                barColor = getBackgroundColor();
+                (i - 1 >= 0) ? leftPosition[i] = leftPosition[i - 1] + itemWidth[i - 1] : leftPosition[0] = 0;
+                template += '<div class="sc-item" style="width:' + itemWidth[i] + '%;' + barColor + 'z-index:' + (config.item.value.length - i) + '">';
+                template += '<span class="sc-label">' + config.item.label[i] + '</span>';
+                template += '<span class="sc-value">' + config.item.prefix + (config.item.outputValue[i] || config.item.value[i]) + config.item.suffix + '</span>';
+                template += '<div class="sc-tooltip">';
+                template += '<span class="sc-tooltip-value">' + config.item.prefix + (config.item.outputValue[i] || config.item.value[i]) + config.item.suffix + '</span>';
+                template += '<span class="sc-tooltip-label">' + config.item.label[i] + '</span>';
+                template += '</div>';
+                template += '</div>';
+            }
+        }
+
+
         if (config.type == 'column') {
             itemWidth = (100 - config.item.value.length * barMargin - barMargin) / config.item.value.length;
             itemHeight = setItemSize();
@@ -146,21 +164,7 @@
             }
         }
 
-        if (config.type == 'bar') {
-            itemWidth = setItemSize();
-            for (i = 0; i < config.item.value.length; i++) {
-                barColor = getBackgroundColor();
-                (i - 1 >= 0) ? leftPosition[i] = leftPosition[i - 1] + itemWidth[i - 1] : leftPosition[0] = 0;
-                template += '<div class="sc-item" style="left:' + leftPosition[i] + '%;width:' + itemWidth[i] + '%;' + barColor + 'z-index:' + (config.item.value.length - i) + '">';
-                template += '<span class="sc-label">' + config.item.label[i] + '</span>';
-                template += '<span class="sc-value">' + config.item.prefix + (config.item.outputValue[i] || config.item.value[i]) + config.item.suffix + '</span>';
-                template += '<div class="sc-tooltip">';
-                template += '<span class="sc-tooltip-value">' + config.item.prefix + (config.item.outputValue[i] || config.item.value[i]) + config.item.suffix + '</span>';
-                template += '<span class="sc-tooltip-label">' + config.item.label[i] + '</span>';
-                template += '</div>';
-                template += '</div>';
-            }
-        }
+
 
         if (config.type == 'waterfall') {
             itemWidth = setItemSize();
