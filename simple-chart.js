@@ -40,7 +40,7 @@
             var bgColor;
             if (config.item.color.length <= 0) {
                 bgColor = '';
-            } else if (config.item.color.length == 1) {
+            } else if (config.item.color.length === 1) {
                 bgColor = 'background-color:' + config.item.color[0] + ';';
             } else {
                 bgColor = 'background-color:' + config.item.color[i] + ';'
@@ -95,7 +95,7 @@
 
         var itemWidth, itemHeight, itemPercentage;
 
-        if (config.type == 'bar') {
+        if (config.type === 'bar') {
             itemWidth = setItemSize();
             for (i = 0; i < config.item.value.length; i++) {
                 barColor = getBackgroundColor();
@@ -112,7 +112,7 @@
         }
 
 
-        if (config.type == 'column') {
+        if (config.type === 'column') {
             itemWidth = (100 - config.item.value.length * barMargin - barMargin) / config.item.value.length;
             itemHeight = setItemSize();
             for (i = 0; i < config.item.value.length; i++) {
@@ -128,7 +128,7 @@
             }
         }
 
-        if (config.type == 'step') {
+        if (config.type === 'step') {
             var previous = 0, stepClass;
             itemPercentage = setItemSize();
             itemWidth = (100 - config.item.value.length * barMargin) / config.item.value.length;
@@ -148,7 +148,7 @@
             }
         }
 
-        if (config.type == 'progress') {
+        if (config.type === 'progress') {
             itemWidth = setItemSize();
             for (i = 0; i < config.item.value.length; i++) {
                 barColor = getBackgroundColor();
@@ -166,7 +166,7 @@
 
 
 
-        if (config.type == 'waterfall') {
+        if (config.type === 'waterfall') {
             itemWidth = setItemSize();
             for (i = 0; i < config.item.value.length; i++) {
                 (i - 1 >= 0) ? leftPosition[i] = leftPosition[i - 1] + itemWidth[i - 1] : leftPosition[0] = 0;
