@@ -193,7 +193,7 @@
                     itemWidth = (100 - itemMargin * (config.data.series[s].values.length + 1)) / config.data.series[s].values.length;
                     itemHeight[i] = config.data.series[s].values[i] * 100 / maxStacked;
                     itemColor = setItemColor(config.data.series[s].color, i);
-                    s === 0 ? bottomPos[i] = 0 : bottomPos[i] += config.data.series[s - 1].values[i] * 100 / maxStacked;
+                    s == 0 ? bottomPos[i] = 0 : bottomPos[i] += config.data.series[s - 1].values[i] * 100 / maxStacked;
 
                     var widthStyle = 'width:' + itemWidth.toFixed(3) + '%;';
                     var heightStyle = 'height:' + itemHeight[i].toFixed(3) + '%;';
@@ -226,7 +226,7 @@
                     itemWidth = (100 - itemMargin * (config.data.series[s].values.length + 1)) / config.data.series[s].values.length;
                     itemHeight[i] = config.data.series[s].values[i] * 100 / maxStacked;
                     itemColor = setItemColor(config.data.series[s].color, i);
-                    s === 0 ? bottomPos[i] = 0 : bottomPos[i] += config.data.series[s - 1].values[i] * 100 / maxStacked;
+                    s == 0 ? bottomPos[i] = 0 : bottomPos[i] += config.data.series[s - 1].values[i] * 100 / maxStacked;
 
                     var widthStyle = 'width:' + itemWidth.toFixed(3) + '%;';
                     var heightStyle = 'height:' + itemHeight[i].toFixed(3) + '%;';
@@ -263,7 +263,7 @@
                         var heightStyle = 'height:' + itemHeight.toFixed(3) + '%;';
                         var widthStyle = 'width:' + itemWidth[i].toFixed(3) + '%;';
 
-                        if (config.layout.height === 'auto') {
+                        if (config.layout.height == 'auto') {
                             topStyle = 'top:auto;';
                             heightStyle = '';
                         }
