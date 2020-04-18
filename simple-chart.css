@@ -1,68 +1,74 @@
 /* Simple Chart */
 
 /* Generic */
-    .sc-chart { background-color:#fff; overflow:hidden; font-family: 'Merriweather', 'Lato', Arial, sans-serif;  }
-    .sc-chart, .sc-chart * { box-sizing:border-box }
-    .sc-title { text-align:right; font-weight:600; font-size:14px; color:#555 }
 
-    .sc-item { border:1px solid rgba(0, 0, 0, .25); background-color:#00aeef; box-shadow:inset 0 1px rgba(255, 255, 255, .3); transition:margin .35s; cursor:pointer; }
-    .sc-item:hover { z-index:1000; box-shadow:0 1px 3px rgba(255,255,255,.5) }
-    .sc-item:hover .sc-tooltip { display:block; margin-top:-30px; }
+.p-simple-chart.is-transparent { box-shadow:none; }
+.is-transparent > .sc-chart { background-color:transparent; }
+.sc-chart { background-color:#fff; overflow:hidden; font-family: 'Merriweather', 'Lato', Arial, sans-serif; padding:80px 60px 60px;  }
+.sc-chart, .sc-chart * { box-sizing:border-box }
+.sc-chart .sc-title { float:left; width:100%; padding:10px 0; margin-top:-60px; text-align:right; font-weight:600; font-size:16px; color:#555 }
 
-    .sc-tooltip { display:none; position:absolute; top:-40px; left:50%; width:140px; padding:5px 10px; margin-left:-70px; font-size:11px; background-color:rgba(255,255,255,.95); border-radius:3px; box-shadow:0 3px 10px rgba(0,0,0,.3); transition:margin .35s; }
-    .sc-tooltip-value { display:block; height:20px; font-size:16px; font-weight:600 }
-    .sc-tooltip-label { color:#555 }
+.sc-item { background-color:#00aeef; transition:margin .35s; cursor:pointer; }
+.sc-item:hover { z-index:1000; }
+.sc-item:hover .sc-tooltip { display:block; margin-top:-30px; }
+.sc-item .sc-main .sc-label { font-size:13px; color:#777; text-align:center }
+.sc-item .sc-main .sc-value {font-size:13px; font-weight:600; }
 
-    .sc-label { font-size:13px; color:#777; text-align:center }
-    .sc-value {font-size:13px; font-weight:600; }
+.sc-tooltip { display:none; position:absolute; top:-40px; left:50%; width:140px; padding:5px 10px; margin-left:-70px; font-size:11px; background-color:rgba(255,255,255,.95); border-radius:3px; box-shadow:0 3px 10px rgba(0,0,0,.3); transition:margin .35s; }
+.sc-tooltip .sc-value { display:block; height:20px; font-size:16px; font-weight:600 }
+.sc-tooltip .sc-type { font-size:13px; }
+.sc-tooltip .sc-label { color:#555 }
 
+.sc-threshold { position:absolute; left:0; right:0; bottom:0; border-top:1px dotted #f55; background-image:linear-gradient(rgba(255, 85, 85, .1), transparent) }
 
-/* Progress */
-    .sc-progress { position:relative; float:left; width:100%; clear:left; padding:20px 50px; }
-    .sc-progress .sc-canvas { position:relative; width:100%; height:20px; margin:30px 0;}
-    .sc-progress .sc-item { position:absolute; height:100%; border-right:none; border-top-color:rgba(0, 0, 0, .15) }
-    .sc-progress .sc-item:first-child { border-radius:3px 0 0 3px }
-    .sc-progress .sc-item:last-child { border-radius:0 3px 3px 0 }
-    .sc-progress .sc-label { position:absolute; bottom:-50px; height:40px }
-    .sc-progress .sc-value { position:absolute; top:-25px; left:0; width:100%; text-align:left }
+.sc-guidelines { position:absolute; top:0; right:0; bottom:0; left:0 }
+.sc-guidelines .sc-line { position:relative; z-index:0; border:0 solid rgba(0,0,0,.1); }
+.sc-guidelines .is-vertical { float:right; height:100%; }
+.sc-guidelines .sc-label { position:absolute; font-size:12px; color:#999 }
+.sc-guidelines .is-horizontal .is-right-aligned { right:-40px; top:-8px; text-align:left; }
+.sc-guidelines .is-horizontal .is-left-aligned { left:-40px; top:-8px; text-align:right }
+.sc-guidelines .is-vertical .sc-label { bottom:-20px; }
+.sc-guidelines .is-vertical .is-left-aligned { }
+.sc-guidelines .is-vertical .is-right-aligned { right:-30px; }
 
-/* Bar */
-    .sc-bar { position:relative; float:left; width:100%; clear:left; padding:20px 160px 20px 210px }
-    .sc-bar .sc-canvas { position:relative; float:left; width:100%; margin:30px 0 }
-    .sc-bar .sc-item { float:left; clear:left; margin:5px 0 0; border-radius:3px }
-    .sc-bar .sc-label { float:left; width:200px; margin-left:-200px; padding-right:10px; text-align:right; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
-    .sc-bar .sc-value { float:right; width:110px; margin-right:-110px; text-indent:5px }
-    .sc-bar .sc-item:hover { margin-left:40px; }
-    .sc-bar .sc-item:hover .sc-label { color:#000 }
-    .sc-bar .sc-tooltip { top:auto; right:-30px; left:auto; margin-left:0  }
 
 /* Column */
-    .sc-column { position:relative; float:left; width:100%; clear:left; padding:60px 30px; }
-    .sc-column .sc-canvas { position:relative; float:left; width:100%; height:100%; padding:20px 0 }
-    .sc-column .sc-title { float:left; width:100%; padding:10px 0; margin-top:-60px; }
-    .sc-column .sc-item { position:absolute; bottom:0; text-align:center; }
-    .sc-column.sc-20-items .sc-label, .sc-column.sc-many-items .sc-label { width:200%; margin:0 -50% }
-    .sc-column.sc-20-items .sc-item:nth-child(2n) .sc-label, .sc-column.sc-many-items .sc-item:nth-child(2n) .sc-label { bottom:-34px; }
-    .sc-column .sc-label { position:absolute; bottom:-50px; left:0; width:100%; height: 40px; overflow:hidden; font-size:11px; font-weight:600;  }
-    .sc-column .sc-value { position:absolute; top:-20px; left:0; width:100%; }
-    .sc-column .sc-item:hover .sc-label { color:#000 }
+.sc-column { position:relative; float:left; width:100%; }
+.sc-column .sc-canvas { position:relative; float:left; width:100%; height:100%; padding:20px }
+.sc-column .sc-line { left:0; right:0; border-width: 1px 0 0; }
+.sc-column .sc-item { position:absolute; bottom:0; height:0; text-align:center; border-radius: 1px; transition:all .3s }
+.sc-column .sc-main .sc-label { position:absolute; bottom:-50px; left:0; width:100%; height: 40px; overflow:hidden; font-size:11px; font-weight:600;  }
+.sc-column .sc-main .sc-value { position:absolute; top:-20px; left:0; width:100%; }
+.sc-column.is-stacked .sc-main .sc-label { bottom:0; color:#fff }
+.sc-column.is-stacked .sc-main .sc-value { display:none }
+.sc-column .sc-item:hover .sc-label { color:#000 }
 
-/* Step */
-    .sc-step { position:relative; float:left; width:100%; clear:left; padding:60px 30px; }
-    .sc-step .sc-canvas { position:relative; float:left; width:100%; height:100%; padding:20px 0 }
-    .sc-step .sc-title { float:left; width:100%; padding:10px 0; margin-top:-60px; }
-    .sc-step .sc-item { position:absolute; bottom:0; text-align:center; border:none; box-shadow:inset 0 3px 0 #00aeef }
-    .sc-step .sc-label { position:absolute; bottom:-20px; left:0; width:100%; overflow:hidden; white-space: nowrap; font-size:11px; font-weight:600; transform:rotate(-30deg); transform-origin:100% 100% }
-    .sc-step .sc-value { position:absolute; top:-20px; left:0; width:100%; }
-    .sc-step .sc-item:hover { z-index:100 !important; margin-bottom:20px; }
-    .sc-step .sc-item:hover .sc-label { color:#000 }
+/* Bar */
+.sc-bar { position:relative; float:left; width:100%; clear:left; padding:80px 160px 60px }
+.sc-bar .sc-canvas { position:relative; float:left; width:100%; height:100%; }
+.sc-bar .sc-line { top:0; bottom:0; border-width: 0 1px 0 0  }
+.sc-bar .sc-item { position:absolute; left:0; border-radius:15px; background-image: linear-gradient(270deg, rgba(255,255,255,.3), transparent) }
+.sc-bar .sc-main .sc-label { float:left; width:200px; margin-left:-200px; padding-right:10px; text-align:right; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
+.sc-bar .sc-main .sc-value { float:right; width:110px; margin-right:-110px; text-indent:5px }
+.sc-bar .sc-item:hover { margin-left:40px; }
+.sc-bar .sc-item:hover .sc-label { color:#000 }
+.has-height-auto .sc-item { position:relative; height:20px; margin-bottom:5px }
+
+/* Progress */
+.sc-progress { position:relative; float:left; width:100%; clear:left; padding:80px 60px 60px; }
+.sc-progress .sc-canvas { position:relative; width:100%; height:20px; margin:30px 0;}
+.sc-progress .sc-line { top:0; bottom:0; border-width: 0 1px 0 0 }
+.sc-progress .sc-item { position:absolute; height:100%; border-right:none; border-top-color:rgba(0, 0, 0, .15) }
+.sc-progress .sc-item:first-child { border-radius:3px 0 0 3px }
+.sc-progress .sc-item:last-child { border-radius:0 3px 3px 0 }
+.sc-progress .sc-main .sc-label { position:absolute; bottom:-50px; height:40px }
+.sc-progress .sc-main .sc-value { position:absolute; top:-25px; left:0; width:100%; text-align:left }
 
 /* Waterfall */
-    .sc-waterfall { position:relative; float:left; width:100%; clear:left; padding:20px 160px }
-    .sc-waterfall .sc-canvas { position:relative; float:left; width:100%; margin:30px -160px }
-    .sc-waterfall .sc-item { position:relative; float:left; clear:left; margin:5px 0 0 160px; border-radius:3px }
-    .sc-waterfall .sc-label { float:left; width:160px; margin-left:-160px; padding-right:20px; text-align:right }
-    .sc-waterfall .sc-value { float:right; width:100px; margin-right:-110px; }
-    .sc-waterfall .sc-item:hover { margin-left:180px; border-left:1px solid rgba(0, 0, 0, .2) }
-    .sc-waterfall .sc-item:hover .sc-label { color:#000 }
-
+.sc-waterfall { position:relative; float:left; width:100%; clear:left; padding:80px 160px 60px }
+.sc-waterfall .sc-canvas { position:relative; float:left; width:100%; }
+.sc-waterfall .sc-item { position:relative; float:left; clear:left; height:20px; margin:5px 0 0 0; border-radius:15px; background-image: linear-gradient(270deg, rgba(255,255,255,.3), transparent)  }
+.sc-waterfall .sc-main .sc-label { float:left; width:160px; margin-left:-160px; padding-right:20px; text-align:right }
+.sc-waterfall .sc-main .sc-value { float:right; width:100px; margin-right:-110px; }
+.sc-waterfall .sc-item:hover { margin-left:40px; border-left:1px solid rgba(0, 0, 0, .2) }
+.sc-waterfall .sc-item:hover .sc-label { color:#000 }
