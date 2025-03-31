@@ -15,7 +15,7 @@
   "license": "MIT",
   "homepage": "https://github.com/andygongea/simple-chart/demo/index.html",
   "dependencies": {
-    "install": "^0.8.2",
+    "install": "^0.13.0",
     "npm": "^6.13.4",
     "jquery": "^3.0.0"
   },
