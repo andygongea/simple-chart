@@ -16,11 +16,11 @@
   "homepage": "https://github.com/andygongea/simple-chart/demo/index.html",
   "dependencies": {
     "install": "^0.8.2",
-    "npm": "^6.13.4",
+    "npm": "^7.0.0",
     "jquery": "^3.0.0"
   },
   "devDependencies": {
-    "grunt": "~0.4.4",
+    "grunt": "~1.0.3",
     "grunt-contrib-cssmin": "latest",
     "grunt-contrib-jshint": "latest",
     "grunt-contrib-less": "latest",
