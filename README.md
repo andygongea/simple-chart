@@ -63,6 +63,8 @@ chart.destroy();
 
 ### Column
 
+![Column Chart](demo/screenshots/column-chart.png)
+
 Vertical bar chart. Supports stacked mode for multiple series.
 
 ```js
@@ -84,6 +86,8 @@ simpleChart('.chart', {
 
 ### Bar
 
+![Bar Chart](demo/screenshots/bar-chart.png)
+
 Horizontal bar chart. Supports stacked mode. Set `layout.height` to `'auto'` to size based on content.
 
 ```js
@@ -104,6 +108,8 @@ simpleChart('.chart', {
 ```
 
 ### Line
+
+![Line Chart](demo/screenshots/line-chart.png)
 
 Line chart with interactive dots and tooltips.
 
@@ -127,6 +133,8 @@ simpleChart('.chart', {
 
 ### Area
 
+![Area Chart](demo/screenshots/area-chart.png)
+
 Same as line chart but with a filled region below the line.
 
 ```js
@@ -145,6 +153,8 @@ simpleChart('.chart', {
 ```
 
 ### Progress
+
+![Progress Chart](demo/screenshots/progress-chart.png)
 
 Horizontal stacked bar showing proportions of a whole.
 
@@ -166,6 +176,8 @@ simpleChart('.chart', {
 
 ### Waterfall
 
+![Waterfall Chart](demo/screenshots/waterfall-chart.png)
+
 Horizontal bars with cumulative offset, useful for showing sequential contributions.
 
 ```js
@@ -185,6 +197,8 @@ simpleChart('.chart', {
 
 ### Heatmap
 
+![Heatmap Chart](demo/screenshots/heatmap-chart.png)
+
 Grid-based chart where cell color intensity represents the value. Each series becomes a row, and labels become columns.
 
 ```js
@@ -203,6 +217,8 @@ simpleChart('.chart', {
 ```
 
 ### Treemap
+
+![Treemap Chart](demo/screenshots/treemap-chart.png)
 
 Space-filling chart where rectangle size represents the value. Uses a squarified layout algorithm.
 
@@ -224,6 +240,8 @@ simpleChart('.chart', {
 ```
 
 ### Gauge
+
+![Gauge Chart](demo/screenshots/gauge-chart.png)
 
 Circular gauge with animated fill. Series values are `[current, min, max]`.
 
