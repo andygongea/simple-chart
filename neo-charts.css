@@ -53,7 +53,7 @@
 
 
 /* Column */
-.nc-column .nc-canvas { position:relative; flex:1; min-height:0; padding:20px; margin-right:60px; }
+.nc-column .nc-canvas { position:relative; flex:1; min-height:0; padding:20px; margin-right:60px; margin-bottom:30px; }
 .nc-column .nc-group { display:flex; align-items:flex-end; position:absolute; bottom:0; }
 .nc-column .nc-stack { position:absolute; bottom:0; display:flex; flex-direction:column-reverse; }
 .nc-column .nc-item { text-align:center; border-radius:1px; transition:all .3s; position:relative; }
@@ -88,7 +88,7 @@
 
 /* Waterfall */
 .nc-waterfall .nc-canvas { position:relative; flex:1; min-height:0; margin:0 100px; display:flex; flex-direction:column; }
-.nc-waterfall .nc-item { position:relative; flex:1 1 0; min-height:0; margin:2px 0; border-radius:15px; background-image: linear-gradient(270deg, rgba(255,255,255,.15), transparent)  }
+.nc-waterfall .nc-item { position:relative; flex:1 1 0; min-height:0; margin:1px 0; border-radius:15px; background-image: linear-gradient(270deg, rgba(255,255,255,.15), transparent)  }
 .nc-waterfall .nc-main .nc-label { float:left; width:160px; margin-left:-160px; padding-right:20px; text-align:right; font-size:12px; }
 .nc-waterfall .nc-main .nc-value { float:right; width:100px; margin-right:-110px; font-size:12px; }
 .nc-waterfall .nc-tooltip { left:auto; right:0; transform:none; bottom:100%; margin-bottom:4px; }
@@ -97,10 +97,10 @@
 .nc-waterfall .nc-item:hover .nc-label { color:var(--nc-text) }
 
 /* Line & Area */
-.nc-linechart .nc-canvas, .nc-area .nc-canvas { position:relative; flex:1; min-height:0; padding:20px; margin-right:60px; }
+.nc-linechart .nc-canvas, .nc-area .nc-canvas { position:relative; flex:1; min-height:0; padding:20px; margin-right:60px; margin-bottom:24px; }
 .nc-area-fill { position:absolute; top:0; left:0; width:100%; height:100%; opacity:.25; -webkit-mask-image:linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 100%); mask-image:linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 100%); }
 .nc-line-segment { position:absolute; height:2px; transform-origin:0 50%; border-radius:1px; transition:left .3s, top .3s, width .3s, transform .3s; }
-.nc-dot { position:absolute; width:10px; height:10px; margin-left:-5px; margin-bottom:-5px; border-radius:50%; background-color:var(--nc-bg, #1a1a2e); border:2px solid; cursor:pointer; z-index:2; transition:transform .2s; }
+.nc-dot { position:absolute; width:10px; height:10px; margin-left:-5px; margin-top:-5px; border-radius:50%; background-color:var(--nc-bg, #1a1a2e); border:2px solid; cursor:pointer; z-index:2; transition:transform .2s; }
 .nc-dot:hover { transform:scale(1.6); z-index:1000; }
 .nc-dot:hover .nc-tooltip { display:block; margin-top:-6px; }
 .nc-dot .nc-tooltip { left:50%; bottom:100%; top:auto; transform:translateX(-50%); margin-bottom:8px; }

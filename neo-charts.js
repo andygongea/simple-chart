@@ -216,11 +216,10 @@
 
         function renderTooltip(serieIdx, i) {
             var serie = series[serieIdx];
-            var pre = escapeHtml(serie.prefix || '');
-            var suf = escapeHtml(serie.suffix || '');
-            var val = serie.outputValues.length > 0
-                ? (pre + escapeHtml(String(serie.outputValues[i])) + suf)
-                : (pre + serie.values[i].toFixed(serie.decimals) + suf);
+            var hasOutput = serie.outputValues.length > 0;
+            var val = hasOutput
+                ? escapeHtml(String(serie.outputValues[i]))
+                : (escapeHtml(serie.prefix || '') + serie.values[i].toFixed(serie.decimals) + escapeHtml(serie.suffix || ''));
             var color = getColorValue(serie.color, i);
 
             return '<div class="nc-tooltip">'
@@ -236,9 +235,10 @@
 
         function renderItemContent(serieIdx, i) {
             var serie = series[serieIdx];
-            var val = serie.outputValues.length > 0 ? escapeHtml(String(serie.outputValues[i])) : serie.values[i];
-            var pre = escapeHtml(serie.prefix || '');
-            var suf = escapeHtml(serie.suffix || '');
+            var hasOutput = serie.outputValues.length > 0;
+            var val = hasOutput ? escapeHtml(String(serie.outputValues[i])) : serie.values[i];
+            var pre = hasOutput ? '' : escapeHtml(serie.prefix || '');
+            var suf = hasOutput ? '' : escapeHtml(serie.suffix || '');
 
             return '<span class="nc-main">'
                 + '<span class="nc-label">' + escapeHtml(serie.labels[i]) + '</span>'
@@ -436,9 +436,6 @@
         function renderLineArea() {
             var isArea = type === 'area';
             var html = '';
-
-            var hasNeg = minValue < 0;
-            var range = hasNeg ? valueRange : maxValue;
             var isSmooth = config.smooth;
 
             var smoothSteps = 8;
@@ -452,36 +449,25 @@
                 var smoothLen = smoothVals.length;
 
                 if (isArea) {
-                    var poly = [];
-                    for (var i = 0; i < smoothLen; i++) {
-                        var yPct = range > 0 ? (smoothVals[i] - minValue) / range * 100 : 0;
-                        poly.push(fix(i / (smoothLen - 1) * 100) + '% ' + fix(100 - yPct) + '%');
-                    }
-                    poly.push('100% 100%', '0% 100%');
-                    html += '<div class="nc-area-fill" style="clip-path:polygon(' + poly.join(',') + ');background-color:' + color + '"></div>';
+                    html += '<div class="nc-area-fill" data-area-series="' + idx + '" style="background-color:' + color + '"></div>';
                 }
 
                 for (var i = 0; i < smoothLen - 1; i++) {
                     html += '<div class="nc-line-segment" data-series="' + idx + '" data-seg="' + i + '" style="background-color:' + color + ';' + delay(isSmooth ? Math.floor(i / smoothSteps) : i) + '"></div>';
                 }
 
-                // Dots at original data points
+                // Dots at original data points (positioned in post-render via positionDots)
                 for (var i = 0; i < len; i++) {
-                    var dotIdx = isSmooth ? i * smoothSteps : i;
-                    if (i === len - 1) dotIdx = smoothLen - 1;
-                    var x = fix(dotIdx / (smoothLen - 1) * 100);
-                    var y = fix(range > 0 ? (serie.values[i] - minValue) / range * 100 : 0);
-                    html += '<div class="nc-dot"' + dataAttr(idx, i) + ' style="left:' + x + '%;bottom:' + y + '%;border-color:' + color + ';' + delay(i) + '">';
+                    html += '<div class="nc-dot"' + dataAttr(idx, i) + ' data-dot-series="' + idx + '" data-dot-index="' + i + '" style="border-color:' + color + ';' + delay(i) + '">';
                     html += renderTooltip(idx, i);
                     html += '</div>';
                 }
 
-                // X-axis labels (render once, from first series)
+                // X-axis labels (render once, from first series — positioned in post-render)
                 if (idx === 0) {
                     html += '<div class="nc-x-labels">';
                     for (var i = 0; i < len; i++) {
-                        var xPos = fix(i / (len - 1) * 100);
-                        html += '<span class="nc-x-label" style="left:' + xPos + '%">' + escapeHtml(serie.labels[i]) + '</span>';
+                        html += '<span class="nc-x-label" data-label-index="' + i + '" data-label-total="' + len + '">' + escapeHtml(serie.labels[i]) + '</span>';
                     }
                     html += '</div>';
                 }
@@ -542,12 +528,12 @@
                 for (var i = 0; i < serie.values.length; i++) {
                     var intensity = heatRange > 0 ? (serie.values[i] - heatMin) / heatRange : 0.5;
                     var cellColor = interpolateColor(lowRgb, highRgb, intensity);
-                    var pre = escapeHtml(serie.prefix || '');
-                    var suf = escapeHtml(serie.suffix || '');
-                    var val = serie.outputValues.length > 0 ? escapeHtml(String(serie.outputValues[i])) : serie.values[i];
+                    var hasOutput = serie.outputValues.length > 0;
+                    var val = hasOutput ? escapeHtml(String(serie.outputValues[i])) : (escapeHtml(serie.prefix || '') + serie.values[i] + escapeHtml(serie.suffix || ''));
+                    var titleVal = hasOutput ? serie.outputValues[i] : ((serie.prefix || '') + serie.values[i] + (serie.suffix || ''));
 
-                    html += '<div class="nc-heatmap-cell"' + dataAttr(s, i) + ' style="background-color:' + cellColor + '" title="' + escapeHtml(serie.title + ': ' + (serie.prefix || '') + (serie.outputValues.length > 0 ? serie.outputValues[i] : serie.values[i]) + (serie.suffix || '')) + '">';
-                    html += '<span class="nc-heatmap-value">' + pre + val + suf + '</span>';
+                    html += '<div class="nc-heatmap-cell"' + dataAttr(s, i) + ' style="background-color:' + cellColor + '" title="' + escapeHtml(serie.title + ': ' + titleVal) + '">';
+                    html += '<span class="nc-heatmap-value">' + val + '</span>';
                     html += renderTooltip(s, i);
                     html += '</div>';
                 }
@@ -663,9 +649,8 @@
                 var r = rects[i];
                 var item = r.item;
                 var serie = series[item.serieIdx];
-                var pre = escapeHtml(serie.prefix || '');
-                var suf = escapeHtml(serie.suffix || '');
-                var val = serie.outputValues.length > 0 ? escapeHtml(String(serie.outputValues[item.itemIdx])) : item.value;
+                var hasOutput = serie.outputValues.length > 0;
+                var val = hasOutput ? escapeHtml(String(serie.outputValues[item.itemIdx])) : (escapeHtml(serie.prefix || '') + item.value + escapeHtml(serie.suffix || ''));
 
                 html += '<div class="nc-treemap-cell"' + dataAttr(item.serieIdx, item.itemIdx) + ' style="'
                     + 'left:' + fix(r.x) + '%;top:' + fix(r.y) + '%;'
@@ -673,7 +658,7 @@
                     + 'background-color:' + item.color + ';'
                     + delay(i) + '">';
                 html += '<span class="nc-treemap-label">' + escapeHtml(item.label) + '</span>';
-                html += '<span class="nc-treemap-value">' + pre + val + suf + '</span>';
+                html += '<span class="nc-treemap-value">' + val + '</span>';
                 html += renderTooltip(item.serieIdx, item.itemIdx);
                 html += '</div>';
             }
@@ -717,9 +702,11 @@
             if (!config.legend || type === 'gauge') return '';
 
             // Single series with multiple colors: item-level legend
+            // Skip for chart types that already show labels on each item
             if (series.length === 1 && !render.stacked) {
                 var serie = series[0];
                 if (serie.color.length <= 1) return '';
+                if (type === 'bar' || type === 'column' || type === 'waterfall' || type === 'progress') return '';
                 var html = '<div class="nc-legend">';
                 for (var i = 0; i < serie.labels.length; i++) {
                     var color = getColorValue(serie.color, i);
@@ -896,6 +883,75 @@
             });
         }
 
+        function positionXLabels(canvas) {
+            var cw = canvas.clientWidth;
+            var pad = 20;
+            var drawW = cw - pad * 2;
+            var labels = canvas.querySelectorAll('.nc-x-label');
+            labels.forEach(function (lbl) {
+                var i = parseInt(lbl.dataset.labelIndex, 10);
+                var total = parseInt(lbl.dataset.labelTotal, 10);
+                var x = pad + (i / (total - 1)) * drawW;
+                lbl.style.left = x + 'px';
+            });
+        }
+
+        function positionAreaFills(canvas) {
+            var cw = canvas.clientWidth;
+            var ch = canvas.clientHeight;
+            var pad = 20;
+            var drawW = cw - pad * 2;
+            var drawH = ch - pad * 2;
+            var hasNeg = minValue < 0;
+            var range = hasNeg ? valueRange : maxValue;
+            var fills = canvas.querySelectorAll('.nc-area-fill');
+
+            fills.forEach(function (fill) {
+                var si = parseInt(fill.dataset.areaSeries, 10);
+                var serie = series[si];
+                var isSmooth = config.smooth;
+                var smoothSteps = 8;
+                var vals = isSmooth ? interpolatePoints(serie.values, smoothSteps) : serie.values;
+                var total = vals.length;
+                var poly = [];
+
+                for (var i = 0; i < total; i++) {
+                    var xPx = pad + (i / (total - 1)) * drawW;
+                    var yPx = pad + (1 - (range > 0 ? (vals[i] - minValue) / range : 0)) * drawH;
+                    poly.push(fix(xPx / cw * 100) + '% ' + fix(yPx / ch * 100) + '%');
+                }
+                // Close polygon at bottom-right and bottom-left (padded)
+                var rightX = fix((pad + drawW) / cw * 100);
+                var leftX = fix(pad / cw * 100);
+                var bottomY = fix((pad + drawH) / ch * 100);
+                poly.push(rightX + '% ' + bottomY + '%');
+                poly.push(leftX + '% ' + bottomY + '%');
+                fill.style.clipPath = 'polygon(' + poly.join(',') + ')';
+            });
+        }
+
+        function positionDots(canvas, dots) {
+            var cw = canvas.clientWidth;
+            var ch = canvas.clientHeight;
+            var pad = 20;
+            var drawW = cw - pad * 2;
+            var drawH = ch - pad * 2;
+            var hasNeg = minValue < 0;
+            var range = hasNeg ? valueRange : maxValue;
+
+            dots.forEach(function (dot) {
+                var si = parseInt(dot.dataset.dotSeries, 10);
+                var di = parseInt(dot.dataset.dotIndex, 10);
+                var serie = series[si];
+                var val = serie.values[di];
+                var len = serie.values.length;
+                var x = pad + (di / (len - 1)) * drawW;
+                var y = pad + (1 - (range > 0 ? (val - minValue) / range : 0)) * drawH;
+                dot.style.left = x + 'px';
+                dot.style.top = y + 'px';
+            });
+        }
+
         var resizeObserver = null;
         var gap = 2;
         var groupGap = 1;
@@ -974,14 +1030,21 @@
         if (type === 'line' || type === 'area') {
             var canvas = element.querySelector('.nc-canvas');
             var segs = canvas.querySelectorAll('.nc-line-segment');
+            var dots = canvas.querySelectorAll('.nc-dot');
 
             positionSegments(canvas, segs);
+            positionDots(canvas, dots);
+            positionAreaFills(canvas);
+            positionXLabels(canvas);
 
             var resizeTimer;
             var onResize = function () {
                 clearTimeout(resizeTimer);
                 resizeTimer = setTimeout(function () {
                     positionSegments(canvas, segs);
+                    positionDots(canvas, dots);
+                    positionAreaFills(canvas);
+                    positionXLabels(canvas);
                 }, 50);
             };
 
