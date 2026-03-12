@@ -16,7 +16,7 @@
         type: 'column', /* progress, bar, waterfall, column, gauge, line, area, heatmap, treemap */
         cssClass: '',
         title: {
-            text: 'Simple Chart',
+            text: 'Neo Charts',
             align: 'right'
         },
         layout: {
@@ -96,7 +96,7 @@
         return colorArray.length === 1 ? colorArray[0] : (colorArray[i] || '#00aeef');
     }
 
-    function simpleChart(element, options) {
+    function neoCharts(element, options) {
         if (typeof element === 'string') {
             element = document.querySelector(element);
         }
@@ -145,7 +145,7 @@
         }
 
         function delay(i) {
-            return 'animation-delay:' + (i * 0.05) + 's;';
+            return 'animation-delay:' + (i * 0.05).toFixed(2) + 's;';
         }
 
         function renderEmpty() {
@@ -249,14 +249,14 @@
                 allHeights.push(sizeArray(series[idx].values));
             }
             for (var i = 0; i < len; i++) {
-                html += '<div class="sc-group">';
+                if (count > 1) html += '<div class="sc-group">';
                 for (var idx = 0; idx < count; idx++) {
                     html += '<div class="sc-item" style="height:' + fix(allHeights[idx][i]) + '%;' + getColor(series[idx].color, i) + delay(i) + '">';
                     html += renderItemContent(idx, i);
                     html += renderTooltip(idx, i);
                     html += '</div>';
                 }
-                html += '</div>';
+                if (count > 1) html += '</div>';
             }
             return html;
         }
@@ -731,6 +731,79 @@
         }
 
         var resizeObserver = null;
+        var gap = 2;
+        var groupGap = 1;
+
+        function sizeColumns(canvas) {
+            var children = [];
+            for (var c = 0; c < canvas.children.length; c++) {
+                var ch = canvas.children[c];
+                if (ch.classList.contains('sc-guidelines') || ch.classList.contains('sc-threshold')) continue;
+                children.push(ch);
+            }
+            var n = children.length;
+            if (!n) return;
+
+            var totalGap = gap * (n - 1);
+            var available = canvas.clientWidth - totalGap;
+            var baseWidth = Math.floor(available / n);
+            var remainder = available - baseWidth * n;
+            var left = 0;
+
+            for (var i = 0; i < n; i++) {
+                var w = baseWidth + (i < remainder ? 1 : 0);
+                var el = children[i];
+                el.style.position = 'absolute';
+                el.style.bottom = '0';
+                el.style.left = left + 'px';
+                el.style.width = w + 'px';
+
+                // Size items within groups
+                if (el.classList.contains('sc-group') || el.classList.contains('sc-stack')) {
+                    var items = el.querySelectorAll('.sc-item');
+                    var gn = items.length;
+                    if (gn > 0 && el.classList.contains('sc-group')) {
+                        var gTotalGap = groupGap * (gn - 1);
+                        var gAvail = w - gTotalGap;
+                        var gBase = Math.floor(gAvail / gn);
+                        var gRem = gAvail - gBase * gn;
+                        var gLeft = 0;
+                        for (var j = 0; j < gn; j++) {
+                            var gw = gBase + (j < gRem ? 1 : 0);
+                            items[j].style.position = 'absolute';
+                            items[j].style.bottom = '0';
+                            items[j].style.left = gLeft + 'px';
+                            items[j].style.width = gw + 'px';
+                            gLeft += gw + groupGap;
+                        }
+                    }
+                    el.style.height = '100%';
+                }
+
+                left += w + gap;
+            }
+        }
+
+        if (type === 'column') {
+            var colCanvas = element.querySelector('.sc-canvas');
+            sizeColumns(colCanvas);
+
+            var colResizeTimer;
+            var onColResize = function () {
+                clearTimeout(colResizeTimer);
+                colResizeTimer = setTimeout(function () {
+                    sizeColumns(colCanvas);
+                }, 50);
+            };
+
+            if (typeof ResizeObserver !== 'undefined') {
+                resizeObserver = new ResizeObserver(onColResize);
+                resizeObserver.observe(element);
+            } else {
+                resizeHandler = onColResize;
+                window.addEventListener('resize', resizeHandler);
+            }
+        }
 
         if (type === 'line' || type === 'area') {
             var canvas = element.querySelector('.sc-canvas');
@@ -820,11 +893,12 @@
             destroy: destroy,
             update: function (newOptions) {
                 destroy();
-                return simpleChart(element, deepMerge(options || {}, newOptions || {}));
+                return neoCharts(element, deepMerge(options || {}, newOptions || {}));
             }
         };
     }
 
-    root.simpleChart = simpleChart;
+    root.neoCharts = neoCharts;
+    root.simpleChart = neoCharts; // backward compat
 
 })(window);

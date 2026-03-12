@@ -1,11 +1,11 @@
 {
-  "name": "simple-chart",
-  "version": "2.0.0",
+  "name": "neo-charts",
+  "version": "1.0.0",
   "description": "Lightweight HTML/CSS chart library. No dependencies. No SVG or Canvas.",
   "author": "Andy Gongea",
   "repository": {
     "type": "git",
-    "url": "https://github.com/andygongea/simple-chart"
+    "url": "https://github.com/andygongea/neo-charts"
   },
   "keywords": [
     "chart",
@@ -14,5 +14,5 @@
     "no-dependencies"
   ],
   "license": "MIT",
-  "homepage": "https://github.com/andygongea/simple-chart/demo/index.html"
+  "homepage": "https://github.com/andygongea/neo-charts/demo/index.html"
 }

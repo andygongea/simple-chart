@@ -1,31 +1,31 @@
-# Simple Chart
+# Neo Charts
 
 Lightweight HTML/CSS chart library with zero dependencies. No SVG, no Canvas — pure DOM elements styled with CSS.
 
 ## Installation
 
-Download `simple-chart.js` and `simple-chart.css`, then include them in your HTML:
+Download `neo-charts.js` and `neo-charts.css`, then include them in your HTML:
 
 ```html
-<link rel="stylesheet" href="simple-chart.css">
-<script src="simple-chart.js"></script>
+<link rel="stylesheet" href="neo-charts.css">
+<script src="neo-charts.js"></script>
 ```
 
 Or install via npm:
 
 ```bash
-npm install simple-chart
+npm install neo-charts
 ```
 
 ## Usage
 
-Create a container element and call `simpleChart()` with a CSS selector (or DOM element) and an options object:
+Create a container element and call `neoCharts()` with a CSS selector (or DOM element) and an options object:
 
 ```html
 <div class="my-chart"></div>
 
 <script>
-var chart = simpleChart('.my-chart', {
+var chart = neoCharts('.my-chart', {
     title: { text: 'Revenue', align: 'center' },
     type: 'column',
     layout: { width: '100%', height: '250px' },
@@ -68,7 +68,7 @@ chart.destroy();
 Vertical bar chart. Supports stacked mode for multiple series.
 
 ```js
-simpleChart('.chart', {
+neoCharts('.chart', {
     type: 'column',
     layout: { width: '100%', height: '250px' },
     data: {
@@ -91,7 +91,7 @@ simpleChart('.chart', {
 Horizontal bar chart. Supports stacked mode. Set `layout.height` to `'auto'` to size based on content.
 
 ```js
-simpleChart('.chart', {
+neoCharts('.chart', {
     type: 'bar',
     layout: { width: '100%', height: 'auto' },
     data: {
@@ -114,7 +114,7 @@ simpleChart('.chart', {
 Line chart with interactive dots and tooltips.
 
 ```js
-simpleChart('.chart', {
+neoCharts('.chart', {
     type: 'line',
     highlight: true,
     layout: { width: '100%', height: '250px' },
@@ -138,7 +138,7 @@ simpleChart('.chart', {
 Same as line chart but with a filled region below the line.
 
 ```js
-simpleChart('.chart', {
+neoCharts('.chart', {
     type: 'area',
     layout: { width: '100%', height: '250px' },
     data: {
@@ -159,7 +159,7 @@ simpleChart('.chart', {
 Horizontal stacked bar showing proportions of a whole.
 
 ```js
-simpleChart('.chart', {
+neoCharts('.chart', {
     type: 'progress',
     layout: { width: '100%', height: '250px' },
     data: {
@@ -181,7 +181,7 @@ simpleChart('.chart', {
 Horizontal bars with cumulative offset, useful for showing sequential contributions.
 
 ```js
-simpleChart('.chart', {
+neoCharts('.chart', {
     type: 'waterfall',
     layout: { width: '100%' },
     data: {
@@ -202,7 +202,7 @@ simpleChart('.chart', {
 Grid-based chart where cell color intensity represents the value. Each series becomes a row, and labels become columns.
 
 ```js
-simpleChart('.chart', {
+neoCharts('.chart', {
     type: 'heatmap',
     highlight: true,
     layout: { width: '100%', height: '350px' },
@@ -223,7 +223,7 @@ simpleChart('.chart', {
 Space-filling chart where rectangle size represents the value. Uses a squarified layout algorithm.
 
 ```js
-simpleChart('.chart', {
+neoCharts('.chart', {
     type: 'treemap',
     highlight: true,
     layout: { width: '100%', height: '350px' },
@@ -246,7 +246,7 @@ simpleChart('.chart', {
 Circular gauge with animated fill. Series values are `[current, min, max]`.
 
 ```js
-simpleChart('.chart', {
+neoCharts('.chart', {
     type: 'gauge',
     layout: { width: '280px', height: '280px' },
     data: {
@@ -271,7 +271,7 @@ simpleChart('.chart', {
 | `highlight` | boolean | `false` | Dim sibling items on hover |
 | `animate` | boolean | `true` | Animate items on initial render |
 | `legend` | boolean | `true` | Show legend when multiple series exist |
-| `title.text` | string | `'Simple Chart'` | Chart title text |
+| `title.text` | string | `'Neo Charts'` | Chart title text |
 | `title.align` | string | `'right'` | Title alignment: `left`, `center`, `right` |
 | `layout.width` | string | `'100%'` | Chart width (CSS value) |
 | `layout.height` | string | `'300px'` | Chart height (CSS value or `'auto'`) |
@@ -297,7 +297,7 @@ simpleChart('.chart', {
 
 ## API
 
-`simpleChart(selector, options)` returns:
+`neoCharts(selector, options)` returns:
 
 | Method | Description |
 |---|---|

@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Simple Chart - Demo</title>
-    <link rel="stylesheet" href="../simple-chart.css">
+    <title>Neo Charts - Demo</title>
+    <link rel="stylesheet" href="../neo-charts.css">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600&family=Lato:ital,wght@0,300;0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
     <style>
         body { padding: 100px; background-color: #0d0d1a; }
@@ -41,7 +41,7 @@
             <div class="gauge-chart"></div>
         </section>
     </div>
-    <script src="../simple-chart.js"></script>
+    <script src="../neo-charts.js"></script>
     <script>
         function abbreviateNumber(arr) {
             var newArr = [];
@@ -92,7 +92,7 @@
             decimals: 0
         }];
 
-        simpleChart('.line-chart', {
+        neoCharts('.line-chart', {
             title: {
                 text: 'Monthly Revenue Trend',
                 align: 'center'
@@ -108,7 +108,7 @@
             }
         });
 
-        simpleChart('.area-chart', {
+        neoCharts('.area-chart', {
             title: {
                 text: 'Monthly Revenue Area',
                 align: 'center'
@@ -133,7 +133,7 @@
             }
         });
 
-        simpleChart('.column-chart', {
+        neoCharts('.column-chart', {
             title: {
                 text: 'All Time Box Office - Top 10 Worldwide Grosses',
                 align: 'center'
@@ -150,7 +150,7 @@
             }
         });
 
-        simpleChart('.bar-chart', {
+        neoCharts('.bar-chart', {
             title: {
                 text: 'All Time Box Office - Top 10 Worldwide Grosses',
                 align: 'center'
@@ -166,7 +166,7 @@
             }
         });
 
-        simpleChart('.progress-chart', {
+        neoCharts('.progress-chart', {
             title: {
                 text: 'All Time Box Office - Top 10 Worldwide Grosses',
                 align: 'center'
@@ -183,7 +183,7 @@
             }
         });
 
-        simpleChart('.waterfall-chart', {
+        neoCharts('.waterfall-chart', {
             title: {
                 text: 'All Time Box Office - Top 10 Worldwide Grosses',
                 align: 'center'
@@ -199,7 +199,7 @@
             }
         });
 
-        simpleChart('.heatmap-chart', {
+        neoCharts('.heatmap-chart', {
             title: {
                 text: 'Weekly Activity Heatmap',
                 align: 'center'
@@ -223,7 +223,7 @@
             }
         });
 
-        simpleChart('.treemap-chart', {
+        neoCharts('.treemap-chart', {
             title: {
                 text: 'Disk Space Usage',
                 align: 'center'
@@ -246,7 +246,7 @@
             }
         });
 
-        simpleChart('.gauge-chart', {
+        neoCharts('.gauge-chart', {
             title: {
                 text: '',
                 align: 'center'
