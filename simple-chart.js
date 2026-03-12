@@ -76,6 +76,15 @@
         return n.toFixed(3);
     }
 
+    function abbreviate(value) {
+        var abs = Math.abs(value);
+        if (abs >= 1e9) return (value / 1e9).toFixed(1).replace(/\.0$/, '') + 'B';
+        if (abs >= 1e6) return (value / 1e6).toFixed(1).replace(/\.0$/, '') + 'M';
+        if (abs >= 1e4) return (value / 1e3).toFixed(1).replace(/\.0$/, '') + 'K';
+        if (abs >= 1000) return Math.round(value).toLocaleString();
+        return parseFloat(value.toFixed(3)).toString();
+    }
+
     function getColor(colorArray, i) {
         if (colorArray.length === 0) return '';
         var c = colorArray.length === 1 ? colorArray[0] : (colorArray[i] || colorArray[colorArray.length - 1]);
@@ -99,7 +108,7 @@
         var series = config.data.series;
         var render = config.data.render;
         var type = config.type;
-        var margin = render.margin;
+
         var maxValue = 0;
         var maxStacked = 0;
 
@@ -146,32 +155,36 @@
         function renderGuidelines(number, align) {
             if (!number) return '';
 
-            var dimension, lineType;
-            if (type === 'column' || type === 'line' || type === 'area') {
-                dimension = 'height:';
-                lineType = 'is-horizontal';
-            } else {
-                dimension = 'width:';
-                lineType = 'is-vertical';
-                number--;
-            }
-
-            var stepPos = 100 / (number || 1);
+            var isHorizontal = (type === 'column' || type === 'line' || type === 'area');
             var scaleMax = render.stacked ? maxStacked : maxValue;
             var pre = series.length > 0 ? (series[0].prefix || '') : '';
             var suf = series.length > 0 ? (series[0].suffix || '') : '';
 
             var html = '<div class="sc-guidelines">';
             for (var i = 0; i <= number; i++) {
-                var pct = 100 - stepPos * i;
-                var label;
-                if (scaleMax > 0) {
-                    var raw = scaleMax * pct / 100;
-                    label = pre + (raw >= 1000 ? Math.round(raw).toLocaleString() : parseFloat(fix(raw))) + suf;
+                var frac = i / number;
+                var raw, pos, label;
+
+                if (isHorizontal) {
+                    raw = scaleMax * (1 - frac);
+                    pos = 'top:' + fix(frac * 100) + '%;left:0;right:0;';
                 } else {
-                    label = fix(pct) + '%';
+                    raw = scaleMax * frac;
+                    pos = 'left:' + fix(frac * 100) + '%;top:0;bottom:0;';
                 }
-                html += '<div class="sc-guideline ' + lineType + '" style="' + dimension + fix(stepPos) + '%">';
+
+                if (scaleMax > 0) {
+                    var abbreviated = abbreviate(raw);
+                    var usedAbbr = abbreviated !== Math.round(raw).toLocaleString() && abbreviated !== parseFloat(raw.toFixed(3)).toString();
+                    label = pre + abbreviated + (usedAbbr ? '' : suf);
+                } else {
+                    label = fix(isHorizontal ? (100 - frac * 100) : (frac * 100)) + '%';
+                }
+
+                var lineType = isHorizontal ? 'is-horizontal' : 'is-vertical';
+                var edgeClass = (i === 0) ? ' is-first' : (i === number ? ' is-last' : '');
+
+                html += '<div class="sc-guideline ' + lineType + edgeClass + '" style="' + pos + '">';
                 html += '<span class="sc-label is-' + align + '-aligned">' + label + '</span>';
                 html += '</div>';
             }
@@ -230,17 +243,21 @@
             var count = series.length;
             if (!count) return html;
 
-            series.forEach(function (serie, idx) {
-                var heights = sizeArray(serie.values);
-                var len = serie.values.length;
-                var w = (100 - margin * (len * count + 1)) / len / count;
-                for (var i = 0; i < len; i++) {
-                    html += '<div class="sc-item" style="left:' + fix((w + margin) * (i * count + idx) + margin) + '%;width:' + fix(w) + '%;height:' + fix(heights[i]) + '%;' + getColor(serie.color, i) + delay(i) + '">';
+            var len = series[0].values.length;
+            var allHeights = [];
+            for (var idx = 0; idx < count; idx++) {
+                allHeights.push(sizeArray(series[idx].values));
+            }
+            for (var i = 0; i < len; i++) {
+                html += '<div class="sc-group">';
+                for (var idx = 0; idx < count; idx++) {
+                    html += '<div class="sc-item" style="height:' + fix(allHeights[idx][i]) + '%;' + getColor(series[idx].color, i) + delay(i) + '">';
                     html += renderItemContent(idx, i);
                     html += renderTooltip(idx, i);
                     html += '</div>';
                 }
-            });
+                html += '</div>';
+            }
             return html;
         }
 
@@ -253,8 +270,6 @@
                 var items = '';
                 var tooltip = '<div class="sc-tooltip">';
                 tooltip += '<div class="sc-tooltip-header">' + series[0].labels[i] + '</div>';
-                var w = (100 - margin * (len + 1)) / len;
-                var bottom = 0;
 
                 for (var s = 0; s < series.length; s++) {
                     var serie = series[s];
@@ -270,10 +285,9 @@
                         + '<span class="sc-tooltip-value">' + val + '</span>'
                         + '</div>';
 
-                    items += '<div class="sc-item" style="left:' + fix((w + margin) * i + margin) + '%;bottom:' + fix(bottom) + '%;width:' + fix(w) + '%;height:' + fix(h) + '%;' + getColor(serie.color, i) + '">';
+                    items += '<div class="sc-item" style="height:' + fix(h) + '%;' + getColor(serie.color, i) + '">';
                     items += renderItemContent(s, i);
                     items += '</div>';
-                    bottom += h;
                 }
 
                 tooltip += '<div class="sc-tooltip-arrow"></div></div>';
@@ -287,43 +301,39 @@
             var count = series.length;
             if (!count) return html;
 
-            series.forEach(function (serie, idx) {
-                var widths = sizeArray(serie.values);
-                var len = serie.values.length;
-                var h = (100 - margin * (len * count + 1)) / len / count;
-                var isAuto = config.layout.height === 'auto';
-
-                for (var i = 0; i < len; i++) {
-                    var top = isAuto ? 'top:auto;' : 'top:' + fix((h + margin) * (i * count + idx) + margin) + '%;';
-                    var height = isAuto ? '' : 'height:' + fix(h) + '%;';
-                    html += '<div class="sc-item" style="left:0;' + top + 'width:' + fix(widths[i]) + '%;' + height + getColor(serie.color, i) + delay(i) + '">';
+            var len = series[0].values.length;
+            var allWidths = [];
+            for (var idx = 0; idx < count; idx++) {
+                allWidths.push(sizeArray(series[idx].values));
+            }
+            for (var i = 0; i < len; i++) {
+                html += count > 1 ? '<div class="sc-group">' : '';
+                for (var idx = 0; idx < count; idx++) {
+                    html += '<div class="sc-item" style="width:' + fix(allWidths[idx][i]) + '%;' + getColor(series[idx].color, i) + delay(i) + '">';
                     html += renderItemContent(idx, i);
                     html += renderTooltip(idx, i);
                     html += '</div>';
                 }
-            });
+                html += count > 1 ? '</div>' : '';
+            }
             return html;
         }
 
         function renderStackedBar() {
             var html = '';
             getMaxSum();
-            var leftPos = [];
+            var len = series[0].values.length;
 
-            for (var s = 0; s < series.length; s++) {
-                var serie = series[s];
-                var len = serie.values.length;
-                var h = (100 - margin * (len + 1)) / len;
-
-                for (var i = 0; i < len; i++) {
-                    var w = serie.values[i] * 100 / maxStacked;
-                    if (s === 0) { leftPos[i] = 0; } else { leftPos[i] += series[s - 1].values[i] * 100 / maxStacked; }
-
-                    html += '<div class="sc-item" style="top:' + fix((h + margin) * i + margin) + '%;width:' + fix(w) + '%;height:' + fix(h) + '%;' + getColor(serie.color, i) + 'left:' + fix(leftPos[i]) + '%">';
+            for (var i = 0; i < len; i++) {
+                html += '<div class="sc-stack">';
+                for (var s = 0; s < series.length; s++) {
+                    var w = series[s].values[i] * 100 / maxStacked;
+                    html += '<div class="sc-item" style="width:' + fix(w) + '%;' + getColor(series[s].color, i) + '">';
                     html += renderItemContent(s, i);
                     html += renderTooltip(s, i);
                     html += '</div>';
                 }
+                html += '</div>';
             }
             return html;
         }
@@ -640,7 +650,7 @@
         }
         chartTemplate += '<div class="sc-canvas">';
 
-        if (type !== 'gauge' && type !== 'heatmap' && type !== 'treemap') {
+        if (type !== 'gauge' && type !== 'heatmap' && type !== 'treemap' && type !== 'progress') {
             if (render.threshold && render.threshold.length) {
                 chartTemplate += renderThreshold();
             }
@@ -704,14 +714,18 @@
                 var o = offsets[si];
                 var a = dots[o + gi];
                 var b = dots[o + gi + 1];
-                var dx = b.offsetLeft - a.offsetLeft;
-                var dy = b.offsetTop - a.offsetTop;
+                var aCx = a.offsetLeft + a.offsetWidth / 2;
+                var aCy = a.offsetTop + a.offsetHeight / 2;
+                var bCx = b.offsetLeft + b.offsetWidth / 2;
+                var bCy = b.offsetTop + b.offsetHeight / 2;
+                var dx = bCx - aCx;
+                var dy = bCy - aCy;
                 var dist = Math.sqrt(dx * dx + dy * dy);
                 var angle = Math.atan2(dy, dx) * 180 / Math.PI;
 
                 seg.style.width = fix(dist) + 'px';
-                seg.style.left = a.offsetLeft + 'px';
-                seg.style.top = a.offsetTop + 'px';
+                seg.style.left = aCx + 'px';
+                seg.style.top = aCy + 'px';
                 seg.style.transform = 'rotate(' + fix(angle) + 'deg)';
             });
         }

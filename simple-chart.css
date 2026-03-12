@@ -30,39 +30,45 @@
 
 .sc-threshold { position:absolute; left:0; right:0; bottom:0; border-top:1px dotted #f55; background-image:linear-gradient(rgba(255, 85, 85, .1), transparent) }
 
-.sc-guidelines { position:absolute; top:0; right:0; bottom:0; left:0 }
-.sc-guidelines .sc-guideline { position:relative; z-index:0; border:0 solid rgba(255,255,255,.08); }
-.sc-guidelines .is-vertical { float:right; height:100%; }
-.sc-guidelines .sc-label { position:absolute; font-size:12px; color:rgba(255,255,255,.3) }
-.sc-guidelines .is-horizontal .is-right-aligned { right:-40px; top:-8px; text-align:left; }
-.sc-guidelines .is-horizontal .is-left-aligned { left:-40px; top:-8px; text-align:right }
-.sc-guidelines .is-vertical .sc-label { top:-20px; }
-.sc-guidelines .is-vertical .is-right-aligned { right:-30px; }
+.sc-guidelines { position:absolute; top:0; right:0; bottom:0; left:0; overflow:visible; z-index:1; pointer-events:none; }
+.sc-guidelines .sc-guideline { position:absolute; z-index:0; border:0 solid rgba(255,255,255,.08); }
+.sc-guidelines .sc-label { position:absolute; font-size:11px; color:rgba(255,255,255,.3); white-space:nowrap; }
+
+/* Horizontal guidelines (column, line, area) */
+.sc-guidelines .is-horizontal { border-top-width:1px; }
+.sc-guidelines .is-horizontal .is-right-aligned { right:0; top:-8px; transform:translateX(100%); padding-left:8px; }
+.sc-guidelines .is-horizontal .is-left-aligned { left:0; top:-8px; transform:translateX(-100%); padding-right:8px; }
+
+/* Vertical guidelines (bar, progress, waterfall) */
+.sc-guidelines .is-vertical { border-right-width:1px; }
+.sc-guidelines .is-vertical .sc-label { bottom:-18px; left:50%; transform:translateX(-50%); text-align:center; }
+.sc-guidelines .is-vertical.is-first .sc-label { left:0; transform:none; text-align:left; }
+.sc-guidelines .is-vertical.is-last .sc-label { left:auto; right:0; transform:none; text-align:right; }
 
 
 /* Column */
-.sc-column .sc-canvas { position:relative; width:100%; flex:1; min-height:0; padding:20px; }
-.sc-column .sc-guideline { left:0; right:0; border-width: 1px 0 0; }
-.sc-column .sc-item { position:absolute; bottom:0; height:0; text-align:center; border-radius: 1px; transition:all .3s }
-.sc-column .sc-main .sc-label { position:absolute; bottom:-50px; left:0; width:100%; height: 40px; overflow:hidden; font-size:11px; font-weight:600; }
+.sc-column .sc-canvas { position:relative; flex:1; min-height:0; padding:20px; margin-right:60px; display:flex; align-items:flex-end; gap:1px; }
+.sc-column .sc-group { flex:1; display:flex; align-items:flex-end; gap:1px; position:relative; height:100%; }
+.sc-column .sc-stack { flex:1; position:relative; display:flex; flex-direction:column-reverse; height:100%; }
+.sc-column .sc-item { flex:1; text-align:center; border-radius:1px; transition:all .3s; position:relative; }
+.sc-column .sc-main .sc-label { position:absolute; bottom:-50px; left:0; width:100%; height:40px; overflow:hidden; font-size:11px; font-weight:600; }
 .sc-column .sc-main .sc-value { position:absolute; top:-20px; left:0; width:100%; }
 .sc-column.is-stacked .sc-main .sc-label { bottom:0; color:#fff }
 .sc-column.is-stacked .sc-main .sc-value { display:none }
 .sc-column .sc-item:hover .sc-label { color:#fff }
 
 /* Bar */
-.sc-bar .sc-canvas { position:relative; width:100%; flex:1; min-height:0; margin:0 100px; }
-.sc-bar .sc-guideline { top:0; bottom:0; border-width: 0 1px 0 0  }
-.sc-bar .sc-item { position:absolute; left:0; border-radius:15px; background-image: linear-gradient(270deg, rgba(255,255,255,.15), transparent) }
+.sc-bar .sc-canvas { position:relative; flex:1; min-height:0; margin:0 100px; display:flex; flex-direction:column; gap:1px; }
+.sc-bar .sc-group { display:flex; flex-direction:column; flex:1; gap:1px; }
+.sc-bar .sc-stack { display:flex; flex:1; }
+.sc-bar .sc-item { border-radius:15px; background-image:linear-gradient(270deg, rgba(255,255,255,.15), transparent); position:relative; }
 .sc-bar .sc-main .sc-label { float:left; width:200px; margin-left:-200px; padding-right:10px; text-align:right; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
 .sc-bar .sc-main .sc-value { float:right; width:110px; margin-right:-110px; text-indent:5px }
 .sc-bar .sc-item:hover { margin-left:40px; }
 .sc-bar .sc-item:hover .sc-label { color:#fff }
-.has-height-auto .sc-item { position:relative; height:20px; margin-bottom:5px }
 
 /* Progress */
 .sc-progress .sc-canvas { position:relative; width:100%; height:20px; margin:30px 0; flex-shrink:0; }
-.sc-progress .sc-guideline { top:0; bottom:0; border-width: 0 1px 0 0 }
 .sc-progress .sc-item { position:absolute; height:100%; border-right:none; border-top-color:rgba(255, 255, 255, .1) }
 .sc-progress .sc-item:first-child { border-radius:3px 0 0 3px }
 .sc-progress .sc-item:last-child { border-radius:0 3px 3px 0 }
@@ -70,16 +76,15 @@
 .sc-progress .sc-main .sc-value { position:absolute; top:-25px; left:0; width:100%; text-align:left }
 
 /* Waterfall */
-.sc-waterfall .sc-canvas { position:relative; width:100%; flex:1; min-height:0; margin:0 100px; display:flex; flex-direction:column; }
-.sc-waterfall .sc-item { position:relative; height:20px; flex-shrink:0; margin:5px 0 0 0; border-radius:15px; background-image: linear-gradient(270deg, rgba(255,255,255,.15), transparent)  }
+.sc-waterfall .sc-canvas { position:relative; flex:1; min-height:0; margin:0 100px; display:flex; flex-direction:column; }
+.sc-waterfall .sc-item { position:relative; flex:1 1 0; min-height:0; margin:2px 0; border-radius:15px; background-image: linear-gradient(270deg, rgba(255,255,255,.15), transparent)  }
 .sc-waterfall .sc-main .sc-label { float:left; width:160px; margin-left:-160px; padding-right:20px; text-align:right }
 .sc-waterfall .sc-main .sc-value { float:right; width:100px; margin-right:-110px; }
 .sc-waterfall .sc-item:hover { margin-left:40px; border-left:1px solid rgba(255, 255, 255, .2) }
 .sc-waterfall .sc-item:hover .sc-label { color:#fff }
 
 /* Line & Area */
-.sc-linechart .sc-canvas, .sc-area .sc-canvas { position:relative; width:100%; flex:1; min-height:0; padding:20px; }
-.sc-linechart .sc-guideline, .sc-area .sc-guideline { left:0; right:0; border-width:1px 0 0; }
+.sc-linechart .sc-canvas, .sc-area .sc-canvas { position:relative; flex:1; min-height:0; padding:20px; margin-right:60px; }
 .sc-area-fill { position:absolute; top:0; left:0; width:100%; height:100%; opacity:.15; }
 .sc-line-segment { position:absolute; height:2px; transform-origin:0 50%; border-radius:1px; transition:left .3s, top .3s, width .3s, transform .3s; }
 .sc-dot { position:absolute; width:10px; height:10px; margin-left:-5px; margin-bottom:-5px; border-radius:50%; background-color:#1a1a2e; border:2px solid; cursor:pointer; z-index:2; transition:transform .2s; }
