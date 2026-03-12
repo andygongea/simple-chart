@@ -17,6 +17,7 @@
         cssClass: '',
         title: {
             text: 'Neo Charts',
+            subtitle: '',
             align: 'right'
         },
         layout: {
@@ -30,11 +31,14 @@
         highlight: false,
         animate: true,
         legend: true,
+        smooth: false,
+        theme: 'dark',
+        onClick: null,
+        onHover: null,
         data: {
             render: {
                 empty: 'No data available.',
                 stacked: false,
-                margin: 0,
                 threshold: []
             },
             series: []
@@ -76,6 +80,12 @@
         return n.toFixed(3);
     }
 
+    function escapeHtml(str) {
+        var div = document.createElement('div');
+        div.appendChild(document.createTextNode(str));
+        return div.innerHTML;
+    }
+
     function abbreviate(value) {
         var abs = Math.abs(value);
         if (abs >= 1e9) return (value / 1e9).toFixed(1).replace(/\.0$/, '') + 'B';
@@ -110,13 +120,18 @@
         var type = config.type;
 
         var maxValue = 0;
+        var minValue = 0;
         var maxStacked = 0;
 
-        // Compute max values
+        // Compute max/min values
         series.forEach(function (serie) {
-            var m = Math.max.apply(null, serie.values);
-            if (maxValue < m) maxValue = m;
+            if (!serie.values.length) return;
+            var mx = Math.max.apply(null, serie.values);
+            var mn = Math.min.apply(null, serie.values);
+            if (maxValue < mx) maxValue = mx;
+            if (minValue > mn) minValue = mn;
         });
+        var valueRange = maxValue - minValue;
 
         function getMaxSum() {
             var sums = [];
@@ -148,32 +163,39 @@
             return 'animation-delay:' + (i * 0.05).toFixed(2) + 's;';
         }
 
+        function dataAttr(serieIdx, itemIdx) {
+            return ' data-nc-series="' + serieIdx + '" data-nc-index="' + itemIdx + '"';
+        }
+
         function renderEmpty() {
-            return '<h2 class="sc-empty">' + render.empty + '</h2>';
+            return '<h2 class="nc-empty">' + escapeHtml(render.empty) + '</h2>';
         }
 
         function renderGuidelines(number, align) {
             if (!number) return '';
 
             var isHorizontal = (type === 'column' || type === 'line' || type === 'area');
+            var hasNeg = minValue < 0;
             var scaleMax = render.stacked ? maxStacked : maxValue;
-            var pre = series.length > 0 ? (series[0].prefix || '') : '';
-            var suf = series.length > 0 ? (series[0].suffix || '') : '';
+            var scaleMin = hasNeg ? minValue : 0;
+            var scaleRange = render.stacked ? maxStacked : (hasNeg ? valueRange : maxValue);
+            var pre = series.length > 0 ? escapeHtml(series[0].prefix || '') : '';
+            var suf = series.length > 0 ? escapeHtml(series[0].suffix || '') : '';
 
-            var html = '<div class="sc-guidelines">';
+            var html = '<div class="nc-guidelines">';
             for (var i = 0; i <= number; i++) {
                 var frac = i / number;
                 var raw, pos, label;
 
                 if (isHorizontal) {
-                    raw = scaleMax * (1 - frac);
+                    raw = scaleMax - frac * scaleRange;
                     pos = 'top:' + fix(frac * 100) + '%;left:0;right:0;';
                 } else {
-                    raw = scaleMax * frac;
+                    raw = scaleMin + frac * scaleRange;
                     pos = 'left:' + fix(frac * 100) + '%;top:0;bottom:0;';
                 }
 
-                if (scaleMax > 0) {
+                if (scaleRange > 0) {
                     var abbreviated = abbreviate(raw);
                     var usedAbbr = abbreviated !== Math.round(raw).toLocaleString() && abbreviated !== parseFloat(raw.toFixed(3)).toString();
                     label = pre + abbreviated + (usedAbbr ? '' : suf);
@@ -184,8 +206,8 @@
                 var lineType = isHorizontal ? 'is-horizontal' : 'is-vertical';
                 var edgeClass = (i === 0) ? ' is-first' : (i === number ? ' is-last' : '');
 
-                html += '<div class="sc-guideline ' + lineType + edgeClass + '" style="' + pos + '">';
-                html += '<span class="sc-label is-' + align + '-aligned">' + label + '</span>';
+                html += '<div class="nc-guideline ' + lineType + edgeClass + '" style="' + pos + '">';
+                html += '<span class="nc-label is-' + align + '-aligned">' + label + '</span>';
                 html += '</div>';
             }
             html += '</div>';
@@ -194,33 +216,33 @@
 
         function renderTooltip(serieIdx, i) {
             var serie = series[serieIdx];
-            var pre = serie.prefix || '';
-            var suf = serie.suffix || '';
+            var pre = escapeHtml(serie.prefix || '');
+            var suf = escapeHtml(serie.suffix || '');
             var val = serie.outputValues.length > 0
-                ? (pre + serie.outputValues[i] + suf)
+                ? (pre + escapeHtml(String(serie.outputValues[i])) + suf)
                 : (pre + serie.values[i].toFixed(serie.decimals) + suf);
             var color = getColorValue(serie.color, i);
 
-            return '<div class="sc-tooltip">'
-                + '<div class="sc-tooltip-header">' + serie.labels[i] + '</div>'
-                + '<div class="sc-tooltip-row">'
-                + '<span class="sc-tooltip-dot" style="background-color:' + color + '"></span>'
-                + '<span class="sc-tooltip-series">' + serie.title + '</span>'
-                + '<span class="sc-tooltip-value">' + val + '</span>'
+            return '<div class="nc-tooltip">'
+                + '<div class="nc-tooltip-header">' + escapeHtml(serie.labels[i]) + '</div>'
+                + '<div class="nc-tooltip-row">'
+                + '<span class="nc-tooltip-dot" style="background-color:' + color + '"></span>'
+                + '<span class="nc-tooltip-series">' + escapeHtml(serie.title) + '</span>'
+                + '<span class="nc-tooltip-value">' + val + '</span>'
                 + '</div>'
-                + '<div class="sc-tooltip-arrow"></div>'
+                + '<div class="nc-tooltip-arrow"></div>'
                 + '</div>';
         }
 
         function renderItemContent(serieIdx, i) {
             var serie = series[serieIdx];
-            var val = serie.outputValues.length > 0 ? serie.outputValues[i] : serie.values[i];
-            var pre = serie.prefix || '';
-            var suf = serie.suffix || '';
+            var val = serie.outputValues.length > 0 ? escapeHtml(String(serie.outputValues[i])) : serie.values[i];
+            var pre = escapeHtml(serie.prefix || '');
+            var suf = escapeHtml(serie.suffix || '');
 
-            return '<span class="sc-main">'
-                + '<span class="sc-label">' + serie.labels[i] + '</span>'
-                + '<span class="sc-value">' + pre + val + suf + '</span>'
+            return '<span class="nc-main">'
+                + '<span class="nc-label">' + escapeHtml(serie.labels[i]) + '</span>'
+                + '<span class="nc-value">' + pre + val + suf + '</span>'
                 + '</span>';
         }
 
@@ -233,7 +255,7 @@
                 } else {
                     val = maxValue > 0 ? fix(threshold * 100 / maxValue) : 0;
                 }
-                html += '<div class="sc-threshold" style="height:' + val + '%"></div>';
+                html += '<div class="nc-threshold" style="height:' + val + '%"></div>';
             });
             return html;
         }
@@ -243,15 +265,28 @@
             var count = series.length;
             if (!count) return html;
 
-            var len = series[0].values.length;
-            var allHeights = [];
-            for (var idx = 0; idx < count; idx++) {
-                allHeights.push(sizeArray(series[idx].values));
+            var hasNeg = minValue < 0;
+            var range = hasNeg ? valueRange : maxValue;
+
+            if (hasNeg) {
+                html += '<div class="nc-baseline" style="bottom:' + fix((-minValue) / range * 100) + '%"></div>';
             }
+
+            var len = series[0].values.length;
             for (var i = 0; i < len; i++) {
-                if (count > 1) html += '<div class="sc-group">';
+                if (count > 1) html += '<div class="nc-group">';
                 for (var idx = 0; idx < count; idx++) {
-                    html += '<div class="sc-item" style="height:' + fix(allHeights[idx][i]) + '%;' + getColor(series[idx].color, i) + delay(i) + '">';
+                    var val = series[idx].values[i];
+                    var h = range > 0 ? fix(Math.abs(val) / range * 100) : 0;
+                    var style = 'height:' + h + '%;' + getColor(series[idx].color, i) + delay(i);
+                    if (hasNeg) {
+                        if (val >= 0) {
+                            style += 'bottom:' + fix((-minValue) / range * 100) + '%;';
+                        } else {
+                            style += 'bottom:' + fix((-minValue - Math.abs(val)) / range * 100) + '%;';
+                        }
+                    }
+                    html += '<div class="nc-item"' + dataAttr(idx, i) + ' style="' + style + '">';
                     html += renderItemContent(idx, i);
                     html += renderTooltip(idx, i);
                     html += '</div>';
@@ -268,30 +303,30 @@
 
             for (var i = 0; i < len; i++) {
                 var items = '';
-                var tooltip = '<div class="sc-tooltip">';
-                tooltip += '<div class="sc-tooltip-header">' + series[0].labels[i] + '</div>';
+                var tooltip = '<div class="nc-tooltip">';
+                tooltip += '<div class="nc-tooltip-header">' + escapeHtml(series[0].labels[i]) + '</div>';
 
                 for (var s = 0; s < series.length; s++) {
                     var serie = series[s];
                     var h = serie.values[i] * 100 / maxStacked;
                     var color = getColorValue(serie.color, i);
                     var val = serie.outputValues && serie.outputValues.length > 0
-                        ? serie.outputValues[i]
-                        : (serie.prefix + serie.values[i].toFixed(serie.decimals) + serie.suffix);
+                        ? escapeHtml(String(serie.outputValues[i]))
+                        : (escapeHtml(serie.prefix) + serie.values[i].toFixed(serie.decimals) + escapeHtml(serie.suffix));
 
-                    tooltip += '<div class="sc-tooltip-row">'
-                        + '<span class="sc-tooltip-dot" style="background-color:' + color + '"></span>'
-                        + '<span class="sc-tooltip-series">' + serie.title + '</span>'
-                        + '<span class="sc-tooltip-value">' + val + '</span>'
+                    tooltip += '<div class="nc-tooltip-row">'
+                        + '<span class="nc-tooltip-dot" style="background-color:' + color + '"></span>'
+                        + '<span class="nc-tooltip-series">' + escapeHtml(serie.title) + '</span>'
+                        + '<span class="nc-tooltip-value">' + val + '</span>'
                         + '</div>';
 
-                    items += '<div class="sc-item" style="height:' + fix(h) + '%;' + getColor(serie.color, i) + '">';
+                    items += '<div class="nc-item"' + dataAttr(s, i) + ' style="height:' + fix(h) + '%;' + getColor(serie.color, i) + '">';
                     items += renderItemContent(s, i);
                     items += '</div>';
                 }
 
-                tooltip += '<div class="sc-tooltip-arrow"></div></div>';
-                html += '<div class="sc-stack">' + tooltip + items + '</div>';
+                tooltip += '<div class="nc-tooltip-arrow"></div></div>';
+                html += '<div class="nc-stack"' + dataAttr(0, i) + '>' + tooltip + items + '</div>';
             }
             return html;
         }
@@ -301,15 +336,24 @@
             var count = series.length;
             if (!count) return html;
 
+            var hasNeg = minValue < 0;
+            var range = hasNeg ? valueRange : maxValue;
+
             var len = series[0].values.length;
-            var allWidths = [];
-            for (var idx = 0; idx < count; idx++) {
-                allWidths.push(sizeArray(series[idx].values));
-            }
             for (var i = 0; i < len; i++) {
-                html += count > 1 ? '<div class="sc-group">' : '';
+                html += count > 1 ? '<div class="nc-group">' : '';
                 for (var idx = 0; idx < count; idx++) {
-                    html += '<div class="sc-item" style="width:' + fix(allWidths[idx][i]) + '%;' + getColor(series[idx].color, i) + delay(i) + '">';
+                    var val = series[idx].values[i];
+                    var w = range > 0 ? fix(Math.abs(val) / range * 100) : 0;
+                    var style = 'width:' + w + '%;' + getColor(series[idx].color, i) + delay(i);
+                    if (hasNeg) {
+                        if (val >= 0) {
+                            style += 'margin-left:' + fix((-minValue) / range * 100) + '%;';
+                        } else {
+                            style += 'margin-left:' + fix((-minValue - Math.abs(val)) / range * 100) + '%;';
+                        }
+                    }
+                    html += '<div class="nc-item"' + dataAttr(idx, i) + ' style="' + style + '">';
                     html += renderItemContent(idx, i);
                     html += renderTooltip(idx, i);
                     html += '</div>';
@@ -325,10 +369,10 @@
             var len = series[0].values.length;
 
             for (var i = 0; i < len; i++) {
-                html += '<div class="sc-stack">';
+                html += '<div class="nc-stack">';
                 for (var s = 0; s < series.length; s++) {
                     var w = series[s].values[i] * 100 / maxStacked;
-                    html += '<div class="sc-item" style="width:' + fix(w) + '%;' + getColor(series[s].color, i) + '">';
+                    html += '<div class="nc-item"' + dataAttr(s, i) + ' style="width:' + fix(w) + '%;' + getColor(series[s].color, i) + '">';
                     html += renderItemContent(s, i);
                     html += renderTooltip(s, i);
                     html += '</div>';
@@ -338,7 +382,7 @@
             return html;
         }
 
-        function renderHorizontalStacked(includeOffset) {
+        function renderHorizontalStacked(useZIndex) {
             var html = '';
             if (!series.length) return html;
 
@@ -349,11 +393,11 @@
 
                 for (var i = 0; i < len; i++) {
                     var style = 'left:' + fix(left) + '%;width:' + fix(widths[i]) + '%;' + getColor(serie.color, i);
-                    if (!includeOffset) {
+                    if (useZIndex) {
                         style += 'z-index:' + (len - i) + ';';
                     }
                     style += delay(i);
-                    html += '<div class="sc-item" style="' + style + '">';
+                    html += '<div class="nc-item"' + dataAttr(idx, i) + ' style="' + style + '">';
                     html += renderItemContent(idx, i);
                     html += renderTooltip(idx, i);
                     html += '</div>';
@@ -363,34 +407,82 @@
             return html;
         }
 
+        function interpolatePoints(values, steps) {
+            var len = values.length;
+            if (len < 2) return values;
+            var result = [];
+            for (var i = 0; i < len - 1; i++) {
+                var p0 = values[Math.max(0, i - 1)];
+                var p1 = values[i];
+                var p2 = values[Math.min(len - 1, i + 1)];
+                var p3 = values[Math.min(len - 1, i + 2)];
+                for (var s = 0; s < steps; s++) {
+                    var t = s / steps;
+                    var t2 = t * t;
+                    var t3 = t2 * t;
+                    var v = 0.5 * (
+                        (2 * p1) +
+                        (-p0 + p2) * t +
+                        (2 * p0 - 5 * p1 + 4 * p2 - p3) * t2 +
+                        (-p0 + 3 * p1 - 3 * p2 + p3) * t3
+                    );
+                    result.push(v);
+                }
+            }
+            result.push(values[len - 1]);
+            return result;
+        }
+
         function renderLineArea() {
             var isArea = type === 'area';
             var html = '';
+
+            var hasNeg = minValue < 0;
+            var range = hasNeg ? valueRange : maxValue;
+            var isSmooth = config.smooth;
+
+            var smoothSteps = 8;
 
             series.forEach(function (serie, idx) {
                 var len = serie.values.length;
                 if (len < 2) return;
 
                 var color = serie.color.length > 0 ? serie.color[0] : '#00aeef';
+                var smoothVals = isSmooth ? interpolatePoints(serie.values, smoothSteps) : serie.values;
+                var smoothLen = smoothVals.length;
 
                 if (isArea) {
                     var poly = [];
-                    for (var i = 0; i < len; i++) {
-                        poly.push(fix(i / (len - 1) * 100) + '% ' + fix(100 - (maxValue > 0 ? serie.values[i] / maxValue * 100 : 0)) + '%');
+                    for (var i = 0; i < smoothLen; i++) {
+                        var yPct = range > 0 ? (smoothVals[i] - minValue) / range * 100 : 0;
+                        poly.push(fix(i / (smoothLen - 1) * 100) + '% ' + fix(100 - yPct) + '%');
                     }
                     poly.push('100% 100%', '0% 100%');
-                    html += '<div class="sc-area-fill" style="clip-path:polygon(' + poly.join(',') + ');background-color:' + color + '"></div>';
+                    html += '<div class="nc-area-fill" style="clip-path:polygon(' + poly.join(',') + ');background-color:' + color + '"></div>';
                 }
 
-                for (var i = 0; i < len - 1; i++) {
-                    html += '<div class="sc-line-segment" data-series="' + idx + '" data-seg="' + i + '" style="background-color:' + color + ';' + delay(i) + '"></div>';
+                for (var i = 0; i < smoothLen - 1; i++) {
+                    html += '<div class="nc-line-segment" data-series="' + idx + '" data-seg="' + i + '" style="background-color:' + color + ';' + delay(isSmooth ? Math.floor(i / smoothSteps) : i) + '"></div>';
                 }
 
+                // Dots at original data points
                 for (var i = 0; i < len; i++) {
-                    var x = fix(i / (len - 1) * 100);
-                    var y = fix(maxValue > 0 ? serie.values[i] / maxValue * 100 : 0);
-                    html += '<div class="sc-dot" style="left:' + x + '%;bottom:' + y + '%;border-color:' + color + ';' + delay(i) + '">';
+                    var dotIdx = isSmooth ? i * smoothSteps : i;
+                    if (i === len - 1) dotIdx = smoothLen - 1;
+                    var x = fix(dotIdx / (smoothLen - 1) * 100);
+                    var y = fix(range > 0 ? (serie.values[i] - minValue) / range * 100 : 0);
+                    html += '<div class="nc-dot"' + dataAttr(idx, i) + ' style="left:' + x + '%;bottom:' + y + '%;border-color:' + color + ';' + delay(i) + '">';
                     html += renderTooltip(idx, i);
+                    html += '</div>';
+                }
+
+                // X-axis labels (render once, from first series)
+                if (idx === 0) {
+                    html += '<div class="nc-x-labels">';
+                    for (var i = 0; i < len; i++) {
+                        var xPos = fix(i / (len - 1) * 100);
+                        html += '<span class="nc-x-label" style="left:' + xPos + '%">' + escapeHtml(serie.labels[i]) + '</span>';
+                    }
                     html += '</div>';
                 }
             });
@@ -424,6 +516,7 @@
                     allValues.push(serie.values[i]);
                 }
             });
+            if (!allValues.length) return renderEmpty();
             var heatMin = Math.min.apply(null, allValues);
             var heatMax = Math.max.apply(null, allValues);
             var heatRange = heatMax - heatMin;
@@ -435,26 +528,26 @@
             var rows = series.length;
 
             // Column labels
-            html += '<div class="sc-heatmap-col-labels" style="grid-template-columns:repeat(' + cols + ',1fr)">';
+            html += '<div class="nc-heatmap-col-labels" style="grid-template-columns:repeat(' + cols + ',1fr)">';
             for (var c = 0; c < cols; c++) {
-                html += '<span class="sc-heatmap-col-label">' + series[0].labels[c] + '</span>';
+                html += '<span class="nc-heatmap-col-label">' + escapeHtml(series[0].labels[c]) + '</span>';
             }
             html += '</div>';
 
             // Grid
-            html += '<div class="sc-heatmap-grid" style="grid-template-columns:repeat(' + cols + ',1fr);grid-template-rows:repeat(' + rows + ',1fr)">';
+            html += '<div class="nc-heatmap-grid" style="grid-template-columns:repeat(' + cols + ',1fr);grid-template-rows:repeat(' + rows + ',1fr)">';
             for (var s = 0; s < rows; s++) {
                 var serie = series[s];
                 var highRgb = parseHexColor(getColorValue(serie.color, 0));
                 for (var i = 0; i < serie.values.length; i++) {
                     var intensity = heatRange > 0 ? (serie.values[i] - heatMin) / heatRange : 0.5;
                     var cellColor = interpolateColor(lowRgb, highRgb, intensity);
-                    var pre = serie.prefix || '';
-                    var suf = serie.suffix || '';
-                    var val = serie.outputValues.length > 0 ? serie.outputValues[i] : serie.values[i];
+                    var pre = escapeHtml(serie.prefix || '');
+                    var suf = escapeHtml(serie.suffix || '');
+                    var val = serie.outputValues.length > 0 ? escapeHtml(String(serie.outputValues[i])) : serie.values[i];
 
-                    html += '<div class="sc-heatmap-cell" style="background-color:' + cellColor + '" title="' + serie.title + ': ' + pre + val + suf + '">';
-                    html += '<span class="sc-heatmap-value">' + pre + val + suf + '</span>';
+                    html += '<div class="nc-heatmap-cell"' + dataAttr(s, i) + ' style="background-color:' + cellColor + '" title="' + escapeHtml(serie.title + ': ' + (serie.prefix || '') + (serie.outputValues.length > 0 ? serie.outputValues[i] : serie.values[i]) + (serie.suffix || '')) + '">';
+                    html += '<span class="nc-heatmap-value">' + pre + val + suf + '</span>';
                     html += renderTooltip(s, i);
                     html += '</div>';
                 }
@@ -462,9 +555,9 @@
             html += '</div>';
 
             // Row labels
-            html += '<div class="sc-heatmap-row-labels" style="grid-template-rows:repeat(' + rows + ',1fr)">';
+            html += '<div class="nc-heatmap-row-labels" style="grid-template-rows:repeat(' + rows + ',1fr)">';
             for (var s = 0; s < rows; s++) {
-                html += '<span class="sc-heatmap-row-label">' + series[s].title + '</span>';
+                html += '<span class="nc-heatmap-row-label">' + escapeHtml(series[s].title) + '</span>';
             }
             html += '</div>';
 
@@ -570,17 +663,17 @@
                 var r = rects[i];
                 var item = r.item;
                 var serie = series[item.serieIdx];
-                var pre = serie.prefix || '';
-                var suf = serie.suffix || '';
-                var val = serie.outputValues.length > 0 ? serie.outputValues[item.itemIdx] : item.value;
+                var pre = escapeHtml(serie.prefix || '');
+                var suf = escapeHtml(serie.suffix || '');
+                var val = serie.outputValues.length > 0 ? escapeHtml(String(serie.outputValues[item.itemIdx])) : item.value;
 
-                html += '<div class="sc-treemap-cell" style="'
+                html += '<div class="nc-treemap-cell"' + dataAttr(item.serieIdx, item.itemIdx) + ' style="'
                     + 'left:' + fix(r.x) + '%;top:' + fix(r.y) + '%;'
                     + 'width:' + fix(r.w) + '%;height:' + fix(r.h) + '%;'
                     + 'background-color:' + item.color + ';'
                     + delay(i) + '">';
-                html += '<span class="sc-treemap-label">' + item.label + '</span>';
-                html += '<span class="sc-treemap-value">' + pre + val + suf + '</span>';
+                html += '<span class="nc-treemap-label">' + escapeHtml(item.label) + '</span>';
+                html += '<span class="nc-treemap-value">' + pre + val + suf + '</span>';
                 html += renderTooltip(item.serieIdx, item.itemIdx);
                 html += '</div>';
             }
@@ -606,49 +699,71 @@
             var numMatch = displayStr.match(/^([^0-9]*?)([\d.]+)(.*)$/);
             var valueSuffix = numMatch ? numMatch[3] : '';
 
-            return '<div class="sc-ring" style="background:conic-gradient(from ' + startDeg + 'deg, ' + trackColor + ' 0deg, ' + trackColor + ' ' + arcDeg + 'deg, transparent ' + arcDeg + 'deg);--gauge-color:' + color + '"'
+            return '<div class="nc-ring" style="background:conic-gradient(from ' + startDeg + 'deg, ' + trackColor + ' 0deg, ' + trackColor + ' ' + arcDeg + 'deg, transparent ' + arcDeg + 'deg);--gauge-color:' + color + '"'
                 + ' data-start="' + startDeg + '" data-arc="' + arcDeg + '" data-pct="' + pct + '"'
                 + ' data-color="' + color + '" data-track="' + trackColor + '"'
                 + ' data-value-num="' + (numMatch ? parseFloat(numMatch[2]) : current) + '"'
-                + ' data-value-prefix="' + (numMatch ? numMatch[1] : '') + '"'
-                + ' data-value-suffix="' + valueSuffix + '"'
+                + ' data-value-prefix="' + escapeHtml(numMatch ? numMatch[1] : '') + '"'
+                + ' data-value-suffix="' + escapeHtml(valueSuffix) + '"'
                 + ' data-value-decimals="' + (numMatch && numMatch[2].indexOf('.') !== -1 ? numMatch[2].split('.')[1].length : 0) + '">'
-                + '<div class="sc-ring-inner"></div>'
-                + '<div class="sc-ring-content">'
-                + '<span class="sc-label">' + serie.title + '</span>'
-                + '<span class="sc-value">0' + valueSuffix + '</span>'
+                + '<div class="nc-ring-inner"></div>'
+                + '<div class="nc-ring-content">'
+                + '<span class="nc-label">' + escapeHtml(serie.title) + '</span>'
+                + '<span class="nc-value">0' + escapeHtml(valueSuffix) + '</span>'
                 + '</div></div>';
         }
 
         function renderLegend() {
             if (!config.legend || type === 'gauge') return '';
-            if (series.length < 2 && !render.stacked) return '';
 
-            var html = '<div class="sc-legend">';
+            // Single series with multiple colors: item-level legend
+            if (series.length === 1 && !render.stacked) {
+                var serie = series[0];
+                if (serie.color.length <= 1) return '';
+                var html = '<div class="nc-legend">';
+                for (var i = 0; i < serie.labels.length; i++) {
+                    var color = getColorValue(serie.color, i);
+                    html += '<div class="nc-legend-item">'
+                        + '<span class="nc-legend-dot" style="background-color:' + color + '"></span>'
+                        + '<span class="nc-legend-label">' + escapeHtml(serie.labels[i]) + '</span>'
+                        + '</div>';
+                }
+                return html + '</div>';
+            }
+
+            // Multi-series: series-level legend
+            if (series.length < 2) return '';
+
+            var html = '<div class="nc-legend">';
             series.forEach(function (serie) {
                 var color = serie.color.length > 0 ? serie.color[0] : '#00aeef';
-                html += '<div class="sc-legend-item">'
-                    + '<span class="sc-legend-dot" style="background-color:' + color + '"></span>'
-                    + '<span class="sc-legend-label">' + serie.title + '</span>'
+                html += '<div class="nc-legend-item">'
+                    + '<span class="nc-legend-dot" style="background-color:' + color + '"></span>'
+                    + '<span class="nc-legend-label">' + escapeHtml(serie.title) + '</span>'
                     + '</div>';
             });
             return html + '</div>';
         }
 
         // Build classes
-        var classes = ['sc-chart'];
-        classes.push(type === 'line' ? 'sc-linechart' : 'sc-' + type);
+        var classes = ['nc-chart'];
+        classes.push(type === 'line' ? 'nc-linechart' : 'nc-' + type);
         if (render.stacked) classes.push('is-stacked');
         if (config.cssClass) classes.push(config.cssClass);
         if (config.layout.height === 'auto') classes.push('has-height-auto');
         if (config.highlight) classes.push('has-highlight');
-        if (config.animate) classes.push('sc-animate');
+        if (config.animate) classes.push('nc-animate');
+        if (config.theme === 'light') classes.push('nc-light');
 
         var chartTemplate = '<div class="' + classes.join(' ') + '" style="width:' + config.layout.width + ';height:' + config.layout.height + '">';
         if (config.title.text) {
-            chartTemplate += '<div class="sc-title" style="text-align:' + config.title.align + '">' + config.title.text + '</div>';
+            chartTemplate += '<div class="nc-title" style="text-align:' + config.title.align + '">' + escapeHtml(config.title.text);
+            if (config.title.subtitle) {
+                chartTemplate += '<div class="nc-subtitle">' + escapeHtml(config.title.subtitle) + '</div>';
+            }
+            chartTemplate += '</div>';
         }
-        chartTemplate += '<div class="sc-canvas">';
+        chartTemplate += '<div class="nc-canvas">';
 
         if (type !== 'gauge' && type !== 'heatmap' && type !== 'treemap' && type !== 'progress') {
             if (render.threshold && render.threshold.length) {
@@ -666,10 +781,10 @@
                     chartTemplate += render.stacked ? renderStackedBar() : renderBar();
                     break;
                 case 'progress':
-                    chartTemplate += renderHorizontalStacked(false);
+                    chartTemplate += renderHorizontalStacked(true);
                     break;
                 case 'waterfall':
-                    chartTemplate += renderHorizontalStacked(true);
+                    chartTemplate += renderHorizontalStacked(false);
                     break;
                 case 'line':
                 case 'area':
@@ -697,35 +812,86 @@
         chartTemplate += '</div>';
 
         // Clean up previous instance
-        if (element._scDestroy) {
-            element._scDestroy();
+        if (element._ncDestroy) {
+            element._ncDestroy();
         }
 
         element.innerHTML = chartTemplate;
+
+        // Event callbacks
+        var clickHandler = null;
+        var hoverHandler = null;
+
+        function getEventData(target) {
+            var el = target.closest('[data-nc-series]');
+            if (!el) return null;
+            var si = parseInt(el.dataset.ncSeries, 10);
+            var ii = parseInt(el.dataset.ncIndex, 10);
+            var serie = series[si];
+            if (!serie) return null;
+            return {
+                seriesIndex: si,
+                index: ii,
+                value: serie.values[ii],
+                label: serie.labels[ii],
+                seriesTitle: serie.title,
+                element: el
+            };
+        }
+
+        if (config.onClick) {
+            clickHandler = function (e) {
+                var data = getEventData(e.target);
+                if (data) config.onClick(data, e);
+            };
+            element.addEventListener('click', clickHandler);
+        }
+
+        if (config.onHover) {
+            hoverHandler = function (e) {
+                var data = getEventData(e.target);
+                if (data) config.onHover(data, e);
+            };
+            element.addEventListener('mouseover', hoverHandler);
+        }
 
         // Post-render: position line segments
         var resizeHandler = null;
         var gaugeAnimId = null;
 
-        function positionSegments(dots, segs, offsets) {
+        function positionSegments(canvas, segs) {
+            var cw = canvas.clientWidth;
+            var ch = canvas.clientHeight;
+            var pad = 20;
+            var drawW = cw - pad * 2;
+            var drawH = ch - pad * 2;
+            var hasNeg = minValue < 0;
+            var range = hasNeg ? valueRange : maxValue;
+
             segs.forEach(function (seg) {
                 var si = parseInt(seg.dataset.series, 10);
                 var gi = parseInt(seg.dataset.seg, 10);
-                var o = offsets[si];
-                var a = dots[o + gi];
-                var b = dots[o + gi + 1];
-                var aCx = a.offsetLeft + a.offsetWidth / 2;
-                var aCy = a.offsetTop + a.offsetHeight / 2;
-                var bCx = b.offsetLeft + b.offsetWidth / 2;
-                var bCy = b.offsetTop + b.offsetHeight / 2;
-                var dx = bCx - aCx;
-                var dy = bCy - aCy;
+                var serie = series[si];
+                var isSmooth = config.smooth;
+                var smoothSteps = 8;
+                var vals = isSmooth ? interpolatePoints(serie.values, smoothSteps) : serie.values;
+                var total = vals.length;
+
+                var v1 = vals[gi];
+                var v2 = vals[gi + 1];
+                var x1 = pad + (gi / (total - 1)) * drawW;
+                var y1 = pad + (1 - (range > 0 ? (v1 - minValue) / range : 0)) * drawH;
+                var x2 = pad + ((gi + 1) / (total - 1)) * drawW;
+                var y2 = pad + (1 - (range > 0 ? (v2 - minValue) / range : 0)) * drawH;
+
+                var dx = x2 - x1;
+                var dy = y2 - y1;
                 var dist = Math.sqrt(dx * dx + dy * dy);
                 var angle = Math.atan2(dy, dx) * 180 / Math.PI;
 
                 seg.style.width = fix(dist) + 'px';
-                seg.style.left = aCx + 'px';
-                seg.style.top = aCy + 'px';
+                seg.style.left = x1 + 'px';
+                seg.style.top = y1 + 'px';
                 seg.style.transform = 'rotate(' + fix(angle) + 'deg)';
             });
         }
@@ -738,7 +904,7 @@
             var children = [];
             for (var c = 0; c < canvas.children.length; c++) {
                 var ch = canvas.children[c];
-                if (ch.classList.contains('sc-guidelines') || ch.classList.contains('sc-threshold')) continue;
+                if (ch.classList.contains('nc-guidelines') || ch.classList.contains('nc-threshold') || ch.classList.contains('nc-baseline')) continue;
                 children.push(ch);
             }
             var n = children.length;
@@ -754,15 +920,15 @@
                 var w = baseWidth + (i < remainder ? 1 : 0);
                 var el = children[i];
                 el.style.position = 'absolute';
-                el.style.bottom = '0';
+                if (!el.style.bottom) el.style.bottom = '0';
                 el.style.left = left + 'px';
                 el.style.width = w + 'px';
 
                 // Size items within groups
-                if (el.classList.contains('sc-group') || el.classList.contains('sc-stack')) {
-                    var items = el.querySelectorAll('.sc-item');
+                if (el.classList.contains('nc-group') || el.classList.contains('nc-stack')) {
+                    var items = el.querySelectorAll('.nc-item');
                     var gn = items.length;
-                    if (gn > 0 && el.classList.contains('sc-group')) {
+                    if (gn > 0 && el.classList.contains('nc-group')) {
                         var gTotalGap = groupGap * (gn - 1);
                         var gAvail = w - gTotalGap;
                         var gBase = Math.floor(gAvail / gn);
@@ -771,7 +937,7 @@
                         for (var j = 0; j < gn; j++) {
                             var gw = gBase + (j < gRem ? 1 : 0);
                             items[j].style.position = 'absolute';
-                            items[j].style.bottom = '0';
+                            if (!items[j].style.bottom) items[j].style.bottom = '0';
                             items[j].style.left = gLeft + 'px';
                             items[j].style.width = gw + 'px';
                             gLeft += gw + groupGap;
@@ -785,7 +951,7 @@
         }
 
         if (type === 'column') {
-            var colCanvas = element.querySelector('.sc-canvas');
+            var colCanvas = element.querySelector('.nc-canvas');
             sizeColumns(colCanvas);
 
             var colResizeTimer;
@@ -806,24 +972,16 @@
         }
 
         if (type === 'line' || type === 'area') {
-            var canvas = element.querySelector('.sc-canvas');
-            var dots = canvas.querySelectorAll('.sc-dot');
-            var segs = canvas.querySelectorAll('.sc-line-segment');
+            var canvas = element.querySelector('.nc-canvas');
+            var segs = canvas.querySelectorAll('.nc-line-segment');
 
-            var offsets = [];
-            var offset = 0;
-            for (var s = 0; s < series.length; s++) {
-                offsets.push(offset);
-                offset += series[s].values.length;
-            }
-
-            positionSegments(dots, segs, offsets);
+            positionSegments(canvas, segs);
 
             var resizeTimer;
             var onResize = function () {
                 clearTimeout(resizeTimer);
                 resizeTimer = setTimeout(function () {
-                    positionSegments(dots, segs, offsets);
+                    positionSegments(canvas, segs);
                 }, 50);
             };
 
@@ -837,7 +995,7 @@
         }
 
         if (type === 'gauge') {
-            var ring = element.querySelector('.sc-ring');
+            var ring = element.querySelector('.nc-ring');
             if (ring) {
                 var gStart = parseFloat(ring.dataset.start);
                 var gArc = parseFloat(ring.dataset.arc);
@@ -848,7 +1006,7 @@
                 var gPre = ring.dataset.valuePrefix;
                 var gSuf = ring.dataset.valueSuffix;
                 var gDec = parseInt(ring.dataset.valueDecimals, 10);
-                var gValEl = ring.querySelector('.sc-value');
+                var gValEl = ring.querySelector('.nc-value');
                 var gDuration = 1000;
                 var gStartTime = null;
 
@@ -879,14 +1037,16 @@
         }
 
         function destroy() {
+            if (clickHandler) element.removeEventListener('click', clickHandler);
+            if (hoverHandler) element.removeEventListener('mouseover', hoverHandler);
             if (resizeHandler) window.removeEventListener('resize', resizeHandler);
             if (resizeObserver) resizeObserver.disconnect();
             if (gaugeAnimId) cancelAnimationFrame(gaugeAnimId);
             element.innerHTML = '';
-            delete element._scDestroy;
+            delete element._ncDestroy;
         }
 
-        element._scDestroy = destroy;
+        element._ncDestroy = destroy;
 
         return {
             element: element,

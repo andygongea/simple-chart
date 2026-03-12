@@ -12,32 +12,32 @@
     </style>
 </head>
 <body>
-    <div class="sc-wrapper">
-        <section class="sc-section">
+    <div class="nc-wrapper">
+        <section class="nc-section">
             <div class="line-chart"></div>
         </section>
-        <section class="sc-section">
+        <section class="nc-section">
             <div class="area-chart"></div>
         </section>
-        <section class="sc-section">
+        <section class="nc-section">
             <div class="column-chart"></div>
         </section>
-        <section class="sc-section">
+        <section class="nc-section">
             <div class="bar-chart"></div>
         </section>
-        <section class="sc-section">
+        <section class="nc-section">
             <div class="progress-chart"></div>
         </section>
-        <section class="sc-section">
+        <section class="nc-section">
             <div class="waterfall-chart"></div>
         </section>
-        <section class="sc-section">
+        <section class="nc-section">
             <div class="heatmap-chart"></div>
         </section>
-        <section class="sc-section">
+        <section class="nc-section">
             <div class="treemap-chart"></div>
         </section>
-        <section class="sc-section">
+        <section class="nc-section">
             <div class="gauge-chart"></div>
         </section>
     </div>
@@ -95,26 +95,33 @@
         neoCharts('.line-chart', {
             title: {
                 text: 'Monthly Revenue Trend',
+                subtitle: 'Smooth curve with click events',
                 align: 'center'
             },
             type: 'line',
             highlight: true,
+            smooth: true,
             layout: {
                 width: '100%',
                 height: '250px'
             },
             data: {
                 series: lineSeries
+            },
+            onClick: function(data) {
+                console.log('Clicked:', data.label, data.value);
             }
         });
 
         neoCharts('.area-chart', {
             title: {
                 text: 'Monthly Revenue Area',
+                subtitle: 'Smooth area with gradient fill',
                 align: 'center'
             },
             type: 'area',
             highlight: true,
+            smooth: true,
             layout: {
                 width: '100%',
                 height: '250px'

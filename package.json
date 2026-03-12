@@ -2,6 +2,12 @@
   "name": "neo-charts",
   "version": "1.0.0",
   "description": "Lightweight HTML/CSS chart library. No dependencies. No SVG or Canvas.",
+  "main": "neo-charts.js",
+  "style": "neo-charts.css",
+  "files": [
+    "neo-charts.js",
+    "neo-charts.css"
+  ],
   "author": "Andy Gongea",
   "repository": {
     "type": "git",

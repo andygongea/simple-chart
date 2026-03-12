@@ -2,21 +2,41 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Security Analytics Dashboard 2025 - Neo Charts</title>
+    <title>Security Analytics Dashboard 2025 - Glass Edition - Neo Charts</title>
     <link rel="stylesheet" href="../neo-charts.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background-color: #06060e; color: #c8c8d4; font-family: 'Inter', -apple-system, sans-serif; -webkit-font-smoothing: antialiased; }
+
+        body {
+            color: rgba(255,255,255,.92);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            min-height: 100vh;
+            background: #050d10;
+            background-image:
+                radial-gradient(ellipse 80% 60% at 10% 15%, rgba(0,50,80,.4) 0%, transparent 60%),
+                radial-gradient(ellipse 70% 55% at 85% 20%, rgba(0,100,90,.25) 0%, transparent 55%),
+                radial-gradient(ellipse 60% 45% at 50% 75%, rgba(15,80,50,.2) 0%, transparent 50%),
+                radial-gradient(ellipse 55% 50% at 25% 55%, rgba(0,80,120,.15) 0%, transparent 50%),
+                radial-gradient(ellipse 40% 35% at 70% 65%, rgba(10,120,80,.1) 0%, transparent 45%);
+        }
 
         .dashboard { max-width: 1440px; margin: 0 auto; padding: 48px 36px; }
 
         /* Header */
-        .dashboard-header { display: flex; align-items: flex-end; justify-content: space-between; padding-bottom: 32px; margin-bottom: 36px; border-bottom: 1px solid rgba(255,255,255,.04); }
+        .dashboard-header { display: flex; align-items: flex-end; justify-content: space-between; padding-bottom: 32px; margin-bottom: 36px; border-bottom: 1px solid rgba(255,255,255,.08); }
         .dashboard-header h1 { font-size: 22px; font-weight: 700; color: #fff; letter-spacing: -0.3px; display: flex; align-items: center; gap: 12px; }
-        .header-icon { width: 32px; height: 32px; border-radius: 8px; background: linear-gradient(135deg, #00e5ff, #0090a8); display: flex; align-items: center; justify-content: center; font-size: 15px; box-shadow: 0 0 20px rgba(0,229,255,.2); }
-        .dashboard-header .meta { font-size: 12px; color: rgba(255,255,255,.25); letter-spacing: 0.3px; }
-        .dashboard-header .meta span { color: rgba(0,229,255,.5); }
+        .header-icon {
+            width: 34px; height: 34px; border-radius: 10px;
+            background: linear-gradient(135deg, rgba(0,229,255,.8), rgba(120,80,220,.8));
+            display: flex; align-items: center; justify-content: center;
+            font-size: 15px;
+            box-shadow: 0 0 24px rgba(0,229,255,.25), inset 0 1px 0 rgba(255,255,255,.3);
+            backdrop-filter: blur(4px);
+        }
+        .dashboard-header .meta { font-size: 12px; color: rgba(255,255,255,.35); letter-spacing: 0.3px; }
+        .dashboard-header .meta span { color: rgba(0,229,255,.6); }
 
         /* Grid */
         .grid { display: grid; gap: 20px; margin-bottom: 20px; }
@@ -24,56 +44,109 @@
         .grid-3 { grid-template-columns: 1fr 1fr 1fr; }
         .grid-1 { grid-template-columns: 1fr; }
 
-        /* Cards */
-        .card, .stat-card { background: rgba(14,14,24,.8); border: 1px solid rgba(255,255,255,.04); border-radius: 10px; position: relative; overflow: hidden; transition: border-color .2s; }
-        .card:hover, .stat-card:hover { border-color: rgba(255,255,255,.08); }
-        .card::before, .stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; }
+        /* Glass Cards */
+        .card, .stat-card {
+            background: rgba(255,255,255,.06);
+            border: 1px solid rgba(255,255,255,.1);
+            border-radius: 16px;
+            position: relative;
+            overflow: hidden;
+            transition: border-color .25s, background .25s, box-shadow .25s;
+            backdrop-filter: blur(40px) saturate(1.8);
+            -webkit-backdrop-filter: blur(40px) saturate(1.8);
+            box-shadow:
+                0 8px 32px rgba(0,0,0,.2),
+                inset 0 1px 0 rgba(255,255,255,.12),
+                inset 0 -1px 0 rgba(255,255,255,.04);
+        }
+        .card:hover, .stat-card:hover {
+            border-color: rgba(255,255,255,.18);
+            background: rgba(255,255,255,.08);
+            box-shadow:
+                0 12px 40px rgba(0,0,0,.25),
+                inset 0 1px 0 rgba(255,255,255,.15),
+                inset 0 -1px 0 rgba(255,255,255,.05);
+        }
+        .card::before, .stat-card::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+        }
+
         .card-header { padding: 18px 22px 0; display: flex; align-items: center; justify-content: space-between; }
-        .card-header .card-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; color: rgba(255,255,255,.3); }
-        .card-header .card-tag { font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; padding: 3px 8px; border-radius: 3px; }
-        .tag-critical { background: rgba(239,68,68,.1); color: #f87171; }
-        .tag-info { background: rgba(0,229,255,.08); color: rgba(0,229,255,.7); }
-        .tag-warning { background: rgba(251,191,36,.08); color: rgba(251,191,36,.7); }
-        .tag-success { background: rgba(52,211,153,.08); color: rgba(52,211,153,.7); }
-        .accent-red::before { background: linear-gradient(90deg, transparent, rgba(239,68,68,.4), transparent); }
-        .accent-amber::before { background: linear-gradient(90deg, transparent, rgba(251,191,36,.4), transparent); }
-        .accent-cyan::before { background: linear-gradient(90deg, transparent, rgba(0,229,255,.4), transparent); }
-        .accent-purple::before { background: linear-gradient(90deg, transparent, rgba(168,85,247,.4), transparent); }
-        .accent-green::before { background: linear-gradient(90deg, transparent, rgba(52,211,153,.4), transparent); }
-        .accent-rose::before { background: linear-gradient(90deg, transparent, rgba(251,113,133,.4), transparent); }
-        .accent-sky::before { background: linear-gradient(90deg, transparent, rgba(56,189,248,.4), transparent); }
-        .accent-indigo::before { background: linear-gradient(90deg, transparent, rgba(129,140,248,.4), transparent); }
+        .card-header .card-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; color: rgba(255,255,255,.4); }
+        .card-header .card-tag {
+            font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;
+            padding: 3px 10px; border-radius: 20px;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+        .tag-critical { background: rgba(239,68,68,.12); color: #f87171; border: 1px solid rgba(239,68,68,.15); }
+        .tag-info { background: rgba(0,229,255,.08); color: rgba(0,229,255,.8); border: 1px solid rgba(0,229,255,.12); }
+        .tag-warning { background: rgba(251,191,36,.08); color: rgba(251,191,36,.8); border: 1px solid rgba(251,191,36,.12); }
+        .tag-success { background: rgba(52,211,153,.08); color: rgba(52,211,153,.8); border: 1px solid rgba(52,211,153,.12); }
+
+        /* Accent top-edge glow */
+        .accent-red::before { background: linear-gradient(90deg, transparent, rgba(239,68,68,.5), transparent); }
+        .accent-amber::before { background: linear-gradient(90deg, transparent, rgba(251,191,36,.5), transparent); }
+        .accent-cyan::before { background: linear-gradient(90deg, transparent, rgba(0,229,255,.5), transparent); }
+        .accent-purple::before { background: linear-gradient(90deg, transparent, rgba(168,85,247,.5), transparent); }
+        .accent-green::before { background: linear-gradient(90deg, transparent, rgba(52,211,153,.5), transparent); }
+        .accent-rose::before { background: linear-gradient(90deg, transparent, rgba(251,113,133,.5), transparent); }
+        .accent-sky::before { background: linear-gradient(90deg, transparent, rgba(56,189,248,.5), transparent); }
+        .accent-indigo::before { background: linear-gradient(90deg, transparent, rgba(129,140,248,.5), transparent); }
         .accent-slate::before { background: linear-gradient(90deg, transparent, rgba(100,116,139,.4), transparent); }
 
         /* Stat Row */
         .stat-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; margin-bottom: 28px; }
         .stat-card { padding: 22px 20px 18px; }
-        .stat-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; color: rgba(255,255,255,.25); margin-bottom: 10px; }
+        .stat-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; color: rgba(255,255,255,.3); margin-bottom: 10px; }
         .stat-value { font-size: 28px; font-weight: 800; color: #fff; line-height: 1; letter-spacing: -0.5px; }
-        .stat-value.neon-red { color: #f87171; text-shadow: 0 0 30px rgba(239,68,68,.2); }
-        .stat-value.neon-amber { color: #fbbf24; text-shadow: 0 0 30px rgba(251,191,36,.2); }
-        .stat-value.neon-cyan { color: #00e5ff; text-shadow: 0 0 30px rgba(0,229,255,.2); }
-        .stat-value.neon-purple { color: #a855f7; text-shadow: 0 0 30px rgba(168,85,247,.2); }
-        .stat-value.neon-green { color: #34d399; text-shadow: 0 0 30px rgba(52,211,153,.2); }
+        .stat-value.neon-red { color: #f87171; text-shadow: 0 0 40px rgba(239,68,68,.3); }
+        .stat-value.neon-amber { color: #fbbf24; text-shadow: 0 0 40px rgba(251,191,36,.3); }
+        .stat-value.neon-cyan { color: #22d3ee; text-shadow: 0 0 40px rgba(0,229,255,.3); }
+        .stat-value.neon-purple { color: #c084fc; text-shadow: 0 0 40px rgba(168,85,247,.3); }
+        .stat-value.neon-green { color: #34d399; text-shadow: 0 0 40px rgba(52,211,153,.3); }
         .stat-change { font-size: 11px; margin-top: 8px; font-weight: 500; }
         .stat-up { color: #f87171; }
         .stat-down { color: #34d399; }
 
         /* Section Dividers */
         .section { margin-top: 36px; }
-        .section-title { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 2px; color: rgba(255,255,255,.2); margin-bottom: 14px; padding-left: 2px; }
+        .section-title { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 2px; color: rgba(255,255,255,.25); margin-bottom: 14px; padding-left: 2px; }
 
         /* Gauge Row */
         .gauge-row { display: flex; gap: 20px; justify-content: center; }
 
-        /* Chart font override */
-        .nc-chart { font-family: 'Inter', -apple-system, sans-serif !important; --nc-bg: rgba(14,14,24,.95); }
+        /* Chart overrides for glass theme */
+        .nc-chart {
+            font-family: 'Inter', -apple-system, sans-serif !important;
+            --nc-bg: rgba(30,20,50,.7);
+        }
+        .nc-tooltip {
+            background-color: rgba(30,20,50,.75) !important;
+            backdrop-filter: blur(24px) saturate(1.6) !important;
+            -webkit-backdrop-filter: blur(24px) saturate(1.6) !important;
+            border: 1px solid rgba(255,255,255,.12) !important;
+            box-shadow: 0 8px 32px rgba(0,0,0,.35) !important;
+        }
+        .nc-tooltip-arrow {
+            background-color: rgba(30,20,50,.75) !important;
+            border-color: rgba(255,255,255,.12) !important;
+        }
+        .nc-gauge .nc-ring-inner {
+            background-color: rgba(30,20,50,.7) !important;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+        .nc-dot {
+            background-color: rgba(30,20,50,.7) !important;
+            box-shadow: 0 2px 8px rgba(0,0,0,.3);
+        }
 
         /* Footer */
         footer { text-align: center; padding: 48px 0 16px; }
-        footer p { font-size: 11px; color: rgba(255,255,255,.15); }
-        footer a { color: rgba(0,229,255,.35); text-decoration: none; transition: color .2s; }
-        footer a:hover { color: rgba(0,229,255,.6); }
+        footer p { font-size: 11px; color: rgba(255,255,255,.2); }
+        footer a { color: rgba(0,229,255,.4); text-decoration: none; transition: color .2s; }
+        footer a:hover { color: rgba(0,229,255,.7); }
     </style>
 </head>
 <body>
@@ -220,7 +293,7 @@
             </div>
         </div>
 
-        <!-- Row 6: Heatmap (new) -->
+        <!-- Row 6: Heatmap -->
         <div class="section">
             <div class="section-title">Attack Frequency</div>
             <div class="grid grid-1">
@@ -251,19 +324,19 @@
 
     <script src="../neo-charts.js"></script>
     <script>
-        // Color palette — restrained neon accents
-        var cyan    = '#00e5ff';
+        // Color palette — vibrant glass-friendly accents
+        var cyan    = '#22d3ee';
         var red     = '#f87171';
         var amber   = '#fbbf24';
-        var purple  = '#a855f7';
+        var purple  = '#c084fc';
         var green   = '#34d399';
-        var slate   = '#64748b';
+        var slate   = '#94a3b8';
         var rose    = '#fb7185';
         var sky     = '#38bdf8';
-        var indigo  = '#818cf8';
+        var indigo  = '#a5b4fc';
         var teal    = '#2dd4bf';
 
-        // ── 1. CVE Monthly Trend (Area) ──
+        // 1. CVE Monthly Trend (Area)
         neoCharts('.chart-cve-trend', {
             title: { text: 'CVE Disclosures 2025', align: 'center' },
             type: 'area',
@@ -280,7 +353,7 @@
             }
         });
 
-        // ── 2. Severity Distribution (Progress) ──
+        // 2. Severity Distribution (Progress)
         neoCharts('.chart-severity', {
             title: { text: 'Severity Distribution', align: 'center' },
             type: 'progress',
@@ -299,7 +372,7 @@
             }
         });
 
-        // ── 3. Top Vulnerability Types (Bar) ──
+        // 3. Top Vulnerability Types (Bar)
         neoCharts('.chart-vuln-types', {
             title: { text: 'Top 10 Vulnerability Types', align: 'center' },
             type: 'bar',
@@ -317,7 +390,7 @@
             }
         });
 
-        // ── 4. OWASP Top 10 2025 (Waterfall) ──
+        // 4. OWASP Top 10 2025 (Waterfall)
         neoCharts('.chart-owasp', {
             title: { text: 'OWASP Top 10 — Incident Rate', align: 'center' },
             type: 'waterfall',
@@ -335,7 +408,7 @@
             }
         });
 
-        // ── 5. Costliest Breaches (Column) ──
+        // 5. Costliest Breaches (Column)
         neoCharts('.chart-breaches', {
             title: { text: 'Costliest Breaches (2024-2025)', align: 'center' },
             type: 'column',
@@ -356,7 +429,7 @@
             }
         });
 
-        // ── 6. Attack Vector Distribution (Treemap) ──
+        // 6. Attack Vector Distribution (Treemap)
         neoCharts('.chart-vectors', {
             title: { text: 'Attack Vector Distribution', align: 'center' },
             type: 'treemap',
@@ -375,7 +448,7 @@
             }
         });
 
-        // ── 7. Vulnerable Packages (Column) ──
+        // 7. Vulnerable Packages (Column)
         neoCharts('.chart-packages', {
             title: { text: 'Top Vulnerable Packages (Known CVEs)', align: 'center' },
             type: 'column',
@@ -393,7 +466,7 @@
             }
         });
 
-        // ── 8. Mean Time to Patch (Bar) ──
+        // 8. Mean Time to Patch (Bar)
         neoCharts('.chart-mttr', {
             title: { text: 'Mean Time to Patch (Days)', align: 'center' },
             type: 'bar',
@@ -411,7 +484,7 @@
             }
         });
 
-        // ── 9. LLM Insecure Code Rates (Column) ──
+        // 9. LLM Insecure Code Rates (Column)
         neoCharts('.chart-llm', {
             title: { text: 'LLM Insecure Code Generation (%)', align: 'center' },
             type: 'column',
@@ -431,7 +504,7 @@
             }
         });
 
-        // ── 10. Zero-Day Exploits (Line) ──
+        // 10. Zero-Day Exploits (Line)
         neoCharts('.chart-zeroday', {
             title: { text: 'Zero-Day Exploits (Quarterly)', align: 'center' },
             type: 'line',
@@ -448,7 +521,7 @@
             }
         });
 
-        // ── 11. Attack Frequency Heatmap ──
+        // 11. Attack Frequency Heatmap
         neoCharts('.chart-heatmap', {
             title: { text: 'Attack Attempts — Weekly Pattern (thousands)', align: 'center' },
             type: 'heatmap',
@@ -467,7 +540,7 @@
             }
         });
 
-        // ── 12. Gauges ──
+        // 12. Gauges
         neoCharts('.gauge-patch', {
             title: { text: '' },
             type: 'gauge',
