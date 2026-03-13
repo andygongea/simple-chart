@@ -370,6 +370,7 @@
 
             for (var i = 0; i < len; i++) {
                 html += '<div class="nc-stack">';
+                html += '<span class="nc-stack-label">' + escapeHtml(series[0].labels[i]) + '</span>';
                 for (var s = 0; s < series.length; s++) {
                     var w = series[s].values[i] * 100 / maxStacked;
                     html += '<div class="nc-item"' + dataAttr(s, i) + ' style="width:' + fix(w) + '%;' + getColor(series[s].color, i) + '">';
@@ -752,7 +753,8 @@
         }
         chartTemplate += '<div class="nc-canvas">';
 
-        if (type !== 'gauge' && type !== 'heatmap' && type !== 'treemap' && type !== 'progress') {
+        var skipGuidelines = type === 'gauge' || type === 'heatmap' || type === 'treemap' || type === 'progress' || (type === 'bar' && render.stacked);
+        if (!skipGuidelines) {
             if (render.threshold && render.threshold.length) {
                 chartTemplate += renderThreshold();
             }
@@ -955,6 +957,17 @@
         var gap = 2;
         var groupGap = 1;
 
+        function toggleLegend(el) {
+            var legend = el.querySelector('.nc-legend');
+            if (!legend) return;
+            // Show legend temporarily to measure it
+            legend.style.display = '';
+            var legendH = legend.offsetHeight;
+            var chartH = el.clientHeight;
+            // Hide if legend takes more than a third of the chart
+            legend.style.display = legendH > chartH / 3 ? 'none' : '';
+        }
+
         function sizeColumns(canvas) {
             var children = [];
             for (var c = 0; c < canvas.children.length; c++) {
@@ -1009,12 +1022,17 @@
             var colCanvas = element.querySelector('.nc-canvas');
             sizeColumns(colCanvas);
 
-            var colResizeTimer;
+            var colResizeRaf;
             var onColResize = function () {
-                clearTimeout(colResizeTimer);
-                colResizeTimer = setTimeout(function () {
+                if (colResizeRaf) cancelAnimationFrame(colResizeRaf);
+                colResizeRaf = requestAnimationFrame(function () {
+                    var items = colCanvas.querySelectorAll('.nc-item');
+                    items.forEach(function (el) { el.style.transition = 'none'; });
                     sizeColumns(colCanvas);
-                }, 50);
+                    toggleLegend(element);
+                    colCanvas.offsetHeight;
+                    items.forEach(function (el) { el.style.transition = ''; });
+                });
             };
 
             if (typeof ResizeObserver !== 'undefined') {
@@ -1036,15 +1054,23 @@
             positionAreaFills(canvas);
             positionXLabels(canvas);
 
-            var resizeTimer;
+            var resizeRaf;
             var onResize = function () {
-                clearTimeout(resizeTimer);
-                resizeTimer = setTimeout(function () {
+                if (resizeRaf) cancelAnimationFrame(resizeRaf);
+                resizeRaf = requestAnimationFrame(function () {
+                    canvas.style.transition = 'none';
+                    segs.forEach(function (s) { s.style.transition = 'none'; });
+                    dots.forEach(function (d) { d.style.transition = 'none'; });
                     positionSegments(canvas, segs);
                     positionDots(canvas, dots);
                     positionAreaFills(canvas);
                     positionXLabels(canvas);
-                }, 50);
+                    toggleLegend(element);
+                    canvas.offsetHeight;
+                    canvas.style.transition = '';
+                    segs.forEach(function (s) { s.style.transition = ''; });
+                    dots.forEach(function (d) { d.style.transition = ''; });
+                });
             };
 
             if (typeof ResizeObserver !== 'undefined') {
@@ -1095,6 +1121,23 @@
                 }
 
                 gaugeAnimId = requestAnimationFrame(animateGauge);
+            }
+        }
+
+        // Toggle legend on initial render and set up observer for chart types without one
+        toggleLegend(element);
+        if (!resizeObserver && !resizeHandler) {
+            var legendRaf;
+            var onLegendResize = function () {
+                if (legendRaf) cancelAnimationFrame(legendRaf);
+                legendRaf = requestAnimationFrame(function () { toggleLegend(element); });
+            };
+            if (typeof ResizeObserver !== 'undefined') {
+                resizeObserver = new ResizeObserver(onLegendResize);
+                resizeObserver.observe(element);
+            } else {
+                resizeHandler = onLegendResize;
+                window.addEventListener('resize', resizeHandler);
             }
         }
 

@@ -76,6 +76,16 @@
 .nc-bar .nc-tooltip .nc-tooltip-arrow { left:auto; right:16px; }
 .nc-bar .nc-item:hover { margin-left:40px; }
 .nc-bar .nc-item:hover .nc-label { color:var(--nc-text) }
+.nc-bar.is-stacked .nc-canvas { gap:6px; margin-bottom:0; }
+.nc-bar.is-stacked .nc-stack { position:relative; }
+.nc-bar.is-stacked .nc-stack-label { position:absolute; right:100%; padding-right:10px; font-size:12px; color:var(--nc-text-muted); white-space:nowrap; top:50%; transform:translateY(-50%); }
+.nc-bar.is-stacked .nc-item { border-radius:0; }
+.nc-bar.is-stacked .nc-stack .nc-item:first-child { border-radius:15px 0 0 15px; }
+.nc-bar.is-stacked .nc-stack .nc-item:last-child { border-radius:0 15px 15px 0; }
+.nc-bar.is-stacked .nc-main .nc-label { display:none }
+.nc-bar.is-stacked .nc-main .nc-value { display:none }
+.nc-bar.is-stacked .nc-stack:hover .nc-main .nc-label { display:block }
+.nc-bar.is-stacked .nc-stack:hover .nc-main .nc-value { display:block }
 
 /* Progress */
 .nc-progress .nc-canvas { position:relative; width:100%; height:20px; margin:30px 0; flex-shrink:0; }
