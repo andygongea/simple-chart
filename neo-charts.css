@@ -98,7 +98,7 @@
 
 /* Line & Area */
 .nc-linechart .nc-canvas, .nc-area .nc-canvas { position:relative; flex:1; min-height:0; padding:20px; margin-right:60px; margin-bottom:24px; }
-.nc-area-fill { position:absolute; top:0; left:0; width:100%; height:100%; opacity:.25; -webkit-mask-image:linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 100%); mask-image:linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 100%); }
+.nc-area-fill { position:absolute; top:0; left:0; width:100%; height:100%; opacity:.25; }
 .nc-line-segment { position:absolute; height:2px; transform-origin:0 50%; border-radius:1px; transition:left .3s, top .3s, width .3s, transform .3s; }
 .nc-dot { position:absolute; width:10px; height:10px; margin-left:-5px; margin-top:-5px; border-radius:50%; background-color:var(--nc-bg, #1a1a2e); border:2px solid; cursor:pointer; z-index:2; transition:transform .2s; }
 .nc-dot:hover { transform:scale(1.6); z-index:1000; }

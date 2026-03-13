@@ -920,12 +920,11 @@
                     var yPx = pad + (1 - (range > 0 ? (vals[i] - minValue) / range : 0)) * drawH;
                     poly.push(fix(xPx / cw * 100) + '% ' + fix(yPx / ch * 100) + '%');
                 }
-                // Close polygon at bottom-right and bottom-left (padded)
+                // Close polygon at bottom-right and bottom-left (at y=0 baseline)
                 var rightX = fix((pad + drawW) / cw * 100);
                 var leftX = fix(pad / cw * 100);
-                var bottomY = fix((pad + drawH) / ch * 100);
-                poly.push(rightX + '% ' + bottomY + '%');
-                poly.push(leftX + '% ' + bottomY + '%');
+                poly.push(rightX + '% 100%');
+                poly.push(leftX + '% 100%');
                 fill.style.clipPath = 'polygon(' + poly.join(',') + ')';
             });
         }
