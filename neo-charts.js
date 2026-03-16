@@ -28,6 +28,8 @@
                 align: 'right'
             }
         },
+        gap: 2,
+        fit: false,
         highlight: false,
         animate: true,
         legend: true,
@@ -133,6 +135,19 @@
         });
         var valueRange = maxValue - minValue;
 
+        // Add 10% headroom so value labels don't collide with chart edges
+        function niceMax(val) {
+            if (val <= 0) return val;
+            var padded = val * 1.10;
+            var magnitude = Math.pow(10, Math.floor(Math.log10(padded)));
+            var step = magnitude / 5;
+            return Math.ceil(padded / step) * step;
+        }
+        if (maxValue > 0 && !render.stacked && type !== 'progress') {
+            maxValue = niceMax(maxValue);
+            valueRange = maxValue - minValue;
+        }
+
         function getMaxSum() {
             var sums = [];
             for (var i = 0; i < series.length; i++) {
@@ -144,7 +159,8 @@
         }
 
         function sizeArray(arr, useTotal) {
-            var denom = useTotal ? arraySum(arr) : maxValue;
+            var sum = arraySum(arr);
+            var denom = useTotal ? (type === 'waterfall' ? niceMax(sum) : sum) : maxValue;
             if (!denom) return arr.map(function () { return 0; });
             var sizes = [];
             for (var j = 0; j < arr.length; j++) {
@@ -171,28 +187,28 @@
             return '<h2 class="nc-empty">' + escapeHtml(render.empty) + '</h2>';
         }
 
-        function renderGuidelines(number, align) {
-            if (!number) return '';
-
+        function guidelineData(number) {
             var isHorizontal = (type === 'column' || type === 'line' || type === 'area');
             var hasNeg = minValue < 0;
-            var scaleMax = render.stacked ? maxStacked : maxValue;
+            var waterfallScale = 0;
+            if (type === 'waterfall' && series.length > 0) {
+                waterfallScale = niceMax(arraySum(series[0].values));
+            }
+            var scaleMax = type === 'waterfall' ? waterfallScale : (render.stacked ? maxStacked : maxValue);
             var scaleMin = hasNeg ? minValue : 0;
-            var scaleRange = render.stacked ? maxStacked : (hasNeg ? valueRange : maxValue);
+            var scaleRange = type === 'waterfall' ? waterfallScale : (render.stacked ? maxStacked : (hasNeg ? valueRange : maxValue));
             var pre = series.length > 0 ? escapeHtml(series[0].prefix || '') : '';
             var suf = series.length > 0 ? escapeHtml(series[0].suffix || '') : '';
 
-            var html = '<div class="nc-guidelines">';
+            var items = [];
             for (var i = 0; i <= number; i++) {
                 var frac = i / number;
-                var raw, pos, label;
+                var raw, label;
 
                 if (isHorizontal) {
                     raw = scaleMax - frac * scaleRange;
-                    pos = 'top:' + fix(frac * 100) + '%;left:0;right:0;';
                 } else {
                     raw = scaleMin + frac * scaleRange;
-                    pos = 'left:' + fix(frac * 100) + '%;top:0;bottom:0;';
                 }
 
                 if (scaleRange > 0) {
@@ -203,11 +219,52 @@
                     label = fix(isHorizontal ? (100 - frac * 100) : (frac * 100)) + '%';
                 }
 
-                var lineType = isHorizontal ? 'is-horizontal' : 'is-vertical';
-                var edgeClass = (i === 0) ? ' is-first' : (i === number ? ' is-last' : '');
+                items.push({ frac: frac, label: label, isFirst: i === 0, isLast: i === number });
+            }
+            return { items: items, isHorizontal: isHorizontal };
+        }
 
+        function renderGuideLines(number) {
+            if (!number) return '';
+            var data = guidelineData(number);
+            var html = '<div class="nc-guidelines">';
+            for (var i = 0; i < data.items.length; i++) {
+                var d = data.items[i];
+                var pos = data.isHorizontal
+                    ? 'top:' + fix(d.frac * 100) + '%;left:0;right:0;'
+                    : 'left:' + fix(d.frac * 100) + '%;top:0;bottom:0;';
+                var lineType = data.isHorizontal ? 'is-horizontal' : 'is-vertical';
+                var edgeClass = d.isFirst ? ' is-first' : (d.isLast ? ' is-last' : '');
+                html += '<div class="nc-guideline ' + lineType + edgeClass + '" style="' + pos + '"></div>';
+            }
+            html += '</div>';
+            return html;
+        }
+
+        function renderAxisLabels(number, axis) {
+            if (!number) return '';
+            var data = guidelineData(number);
+            var html = '<div class="nc-' + axis + 'axis">';
+            for (var i = 0; i < data.items.length; i++) {
+                html += '<span class="nc-axis-label">' + data.items[i].label + '</span>';
+            }
+            html += '</div>';
+            return html;
+        }
+
+        function renderGuidelines(number, align) {
+            if (!number) return '';
+            var data = guidelineData(number);
+            var html = '<div class="nc-guidelines">';
+            for (var i = 0; i < data.items.length; i++) {
+                var d = data.items[i];
+                var pos = data.isHorizontal
+                    ? 'top:' + fix(d.frac * 100) + '%;left:0;right:0;'
+                    : 'left:' + fix(d.frac * 100) + '%;top:0;bottom:0;';
+                var lineType = data.isHorizontal ? 'is-horizontal' : 'is-vertical';
+                var edgeClass = d.isFirst ? ' is-first' : (d.isLast ? ' is-last' : '');
                 html += '<div class="nc-guideline ' + lineType + edgeClass + '" style="' + pos + '">';
-                html += '<span class="nc-label is-' + align + '-aligned">' + label + '</span>';
+                html += '<span class="nc-label is-' + align + '-aligned">' + d.label + '</span>';
                 html += '</div>';
             }
             html += '</div>';
@@ -233,16 +290,18 @@
                 + '</div>';
         }
 
-        function renderItemContent(serieIdx, i) {
+        function renderItemContent(serieIdx, i, opts) {
             var serie = series[serieIdx];
             var hasOutput = serie.outputValues.length > 0;
             var val = hasOutput ? escapeHtml(String(serie.outputValues[i])) : serie.values[i];
             var pre = hasOutput ? '' : escapeHtml(serie.prefix || '');
             var suf = hasOutput ? '' : escapeHtml(serie.suffix || '');
+            var hideLabel = opts && opts.hideLabel;
+            var hideValue = opts && opts.hideValue;
 
             return '<span class="nc-main">'
-                + '<span class="nc-label">' + escapeHtml(serie.labels[i]) + '</span>'
-                + '<span class="nc-value">' + pre + val + suf + '</span>'
+                + (hideLabel ? '' : '<span class="nc-label">' + escapeHtml(serie.labels[i]) + '</span>')
+                + (hideValue ? '' : '<span class="nc-value">' + pre + val + suf + '</span>')
                 + '</span>';
         }
 
@@ -273,8 +332,9 @@
             }
 
             var len = series[0].values.length;
+            var isGrouped = count > 1;
             for (var i = 0; i < len; i++) {
-                if (count > 1) html += '<div class="nc-group">';
+                if (isGrouped) html += '<div class="nc-group">';
                 for (var idx = 0; idx < count; idx++) {
                     var val = series[idx].values[i];
                     var h = range > 0 ? fix(Math.abs(val) / range * 100) : 0;
@@ -287,11 +347,13 @@
                         }
                     }
                     html += '<div class="nc-item"' + dataAttr(idx, i) + ' style="' + style + '">';
-                    html += renderItemContent(idx, i);
+                    html += renderItemContent(idx, i, { hideLabel: true });
                     html += renderTooltip(idx, i);
                     html += '</div>';
                 }
-                if (count > 1) html += '</div>';
+                if (isGrouped) {
+                    html += '</div>';
+                }
             }
             return html;
         }
@@ -321,7 +383,7 @@
                         + '</div>';
 
                     items += '<div class="nc-item"' + dataAttr(s, i) + ' style="height:' + fix(h) + '%;' + getColor(serie.color, i) + '">';
-                    items += renderItemContent(s, i);
+                    items += renderItemContent(s, i, { hideLabel: true, hideValue: true });
                     items += '</div>';
                 }
 
@@ -336,12 +398,13 @@
             var count = series.length;
             if (!count) return html;
 
+            var isGrouped = count > 1;
             var hasNeg = minValue < 0;
             var range = hasNeg ? valueRange : maxValue;
 
             var len = series[0].values.length;
             for (var i = 0; i < len; i++) {
-                html += count > 1 ? '<div class="nc-group">' : '';
+                html += isGrouped ? '<div class="nc-group">' : '';
                 for (var idx = 0; idx < count; idx++) {
                     var val = series[idx].values[i];
                     var w = range > 0 ? fix(Math.abs(val) / range * 100) : 0;
@@ -354,11 +417,13 @@
                         }
                     }
                     html += '<div class="nc-item"' + dataAttr(idx, i) + ' style="' + style + '">';
-                    html += renderItemContent(idx, i);
+                    html += renderItemContent(idx, i, { hideLabel: true });
                     html += renderTooltip(idx, i);
                     html += '</div>';
                 }
-                html += count > 1 ? '</div>' : '';
+                if (isGrouped) {
+                    html += '</div>';
+                }
             }
             return html;
         }
@@ -370,11 +435,10 @@
 
             for (var i = 0; i < len; i++) {
                 html += '<div class="nc-stack">';
-                html += '<span class="nc-stack-label">' + escapeHtml(series[0].labels[i]) + '</span>';
                 for (var s = 0; s < series.length; s++) {
                     var w = series[s].values[i] * 100 / maxStacked;
                     html += '<div class="nc-item"' + dataAttr(s, i) + ' style="width:' + fix(w) + '%;' + getColor(series[s].color, i) + '">';
-                    html += renderItemContent(s, i);
+                    html += renderItemContent(s, i, { hideLabel: true, hideValue: true });
                     html += renderTooltip(s, i);
                     html += '</div>';
                 }
@@ -399,7 +463,7 @@
                     }
                     style += delay(i);
                     html += '<div class="nc-item"' + dataAttr(idx, i) + ' style="' + style + '">';
-                    html += renderItemContent(idx, i);
+                    html += renderItemContent(idx, i, useZIndex ? {} : { hideLabel: true, hideValue: true });
                     html += renderTooltip(idx, i);
                     html += '</div>';
                     left += widths[i];
@@ -464,14 +528,6 @@
                     html += '</div>';
                 }
 
-                // X-axis labels (render once, from first series — positioned in post-render)
-                if (idx === 0) {
-                    html += '<div class="nc-x-labels">';
-                    for (var i = 0; i < len; i++) {
-                        html += '<span class="nc-x-label" data-label-index="' + i + '" data-label-total="' + len + '">' + escapeHtml(serie.labels[i]) + '</span>';
-                    }
-                    html += '</div>';
-                }
             });
             return html;
         }
@@ -700,7 +756,7 @@
         }
 
         function renderLegend() {
-            if (!config.legend || type === 'gauge') return '';
+            if (!config.legend || type === 'gauge' || type === 'treemap') return '';
 
             // Single series with multiple colors: item-level legend
             // Skip for chart types that already show labels on each item
@@ -739,11 +795,13 @@
         if (render.stacked) classes.push('is-stacked');
         if (config.cssClass) classes.push(config.cssClass);
         if (config.layout.height === 'auto') classes.push('has-height-auto');
+        if (config.fit) classes.push('is-fit');
         if (config.highlight) classes.push('has-highlight');
         if (config.animate) classes.push('nc-animate');
         if (config.theme === 'light') classes.push('nc-light');
 
-        var chartTemplate = '<div class="' + classes.join(' ') + '" style="width:' + config.layout.width + ';height:' + config.layout.height + '">';
+        var heightProp = type === 'gauge' ? 'height' : 'min-height';
+        var chartTemplate = '<div class="' + classes.join(' ') + '" style="width:' + config.layout.width + ';' + heightProp + ':' + config.layout.height + '">';
         if (config.title.text) {
             chartTemplate += '<div class="nc-title" style="text-align:' + config.title.align + '">' + escapeHtml(config.title.text);
             if (config.title.subtitle) {
@@ -751,14 +809,46 @@
             }
             chartTemplate += '</div>';
         }
-        chartTemplate += '<div class="nc-canvas">';
+        chartTemplate += '<div class="nc-chart-body">';
 
+        var useGrid = (type === 'line' || type === 'area' || type === 'column' || type === 'bar' || type === 'waterfall');
+        var isHorizontalBar = type === 'bar' || type === 'waterfall';
         var skipGuidelines = type === 'gauge' || type === 'heatmap' || type === 'treemap' || type === 'progress' || (type === 'bar' && render.stacked);
+
+        // Bar/waterfall: render y-axis labels (category names) before the plot
+        if (isHorizontalBar && series.length > 0 && series[0].labels.length > 0) {
+            var isGrouped = series.length > 1 && !render.stacked;
+            var yHtml = '<div class="nc-yaxis">';
+            var len = series[0].values.length;
+            if (isGrouped) {
+                for (var yi = 0; yi < len; yi++) {
+                    yHtml += '<div class="nc-label-group">';
+                    yHtml += '<span class="nc-label-item">' + escapeHtml(series[0].labels[yi]) + '</span>';
+                    yHtml += '</div>';
+                }
+            } else if (render.stacked) {
+                for (var yi = 0; yi < len; yi++) {
+                    yHtml += '<span class="nc-label-item">' + escapeHtml(series[0].labels[yi]) + '</span>';
+                }
+            } else {
+                for (var yi = 0; yi < len; yi++) {
+                    yHtml += '<span class="nc-label-item">' + escapeHtml(series[0].labels[yi]) + '</span>';
+                }
+            }
+            yHtml += '</div>';
+            chartTemplate += yHtml;
+        }
+
+        chartTemplate += '<div class="nc-canvas nc-plot">';
         if (!skipGuidelines) {
             if (render.threshold && render.threshold.length) {
                 chartTemplate += renderThreshold();
             }
-            chartTemplate += renderGuidelines(config.layout.lines.number, config.layout.lines.align);
+            if (useGrid) {
+                chartTemplate += renderGuideLines(config.layout.lines.number);
+            } else {
+                chartTemplate += renderGuidelines(config.layout.lines.number, config.layout.lines.align);
+            }
         }
 
         if (series.length > 0 && series[0].values.length > 0 && series[0].labels.length > 0) {
@@ -796,8 +886,36 @@
             chartTemplate += renderEmpty();
         }
 
-        chartTemplate += '</div>';
+        chartTemplate += '</div>'; // close .nc-plot
+
+        // For grid layouts, render axis labels outside .nc-plot but inside .nc-chart-body
+        if (useGrid && !skipGuidelines && !isHorizontalBar) {
+            // Line/area/column: y-axis = guideline values on the right
+            chartTemplate += renderAxisLabels(config.layout.lines.number, 'y');
+        }
+
+        // Footer: x-axis + legend — always rendered for consistent height across sibling charts
+        chartTemplate += '<div class="nc-footer">';
+
+        if (useGrid && !skipGuidelines) {
+            if (isHorizontalBar) {
+                // Bar/waterfall: x-axis = guideline values (horizontal axis)
+                chartTemplate += renderAxisLabels(config.layout.lines.number, 'x');
+            } else if (series.length > 0 && series[0].labels.length > 0) {
+                // Line/area/column: x-axis = series labels
+                var xHtml = '<div class="nc-xaxis">';
+                var lbls = series[0].labels;
+                for (var li = 0; li < lbls.length; li++) {
+                    xHtml += '<span class="nc-axis-label">' + escapeHtml(lbls[li]) + '</span>';
+                }
+                xHtml += '</div>';
+                chartTemplate += xHtml;
+            }
+        }
+
         chartTemplate += renderLegend();
+        chartTemplate += '</div>'; // close .nc-footer
+        chartTemplate += '</div>'; // close .nc-chart-body
         chartTemplate += '</div>';
 
         // Clean up previous instance
@@ -851,9 +969,6 @@
         function positionSegments(canvas, segs) {
             var cw = canvas.clientWidth;
             var ch = canvas.clientHeight;
-            var pad = 20;
-            var drawW = cw - pad * 2;
-            var drawH = ch - pad * 2;
             var hasNeg = minValue < 0;
             var range = hasNeg ? valueRange : maxValue;
 
@@ -868,10 +983,10 @@
 
                 var v1 = vals[gi];
                 var v2 = vals[gi + 1];
-                var x1 = pad + (gi / (total - 1)) * drawW;
-                var y1 = pad + (1 - (range > 0 ? (v1 - minValue) / range : 0)) * drawH;
-                var x2 = pad + ((gi + 1) / (total - 1)) * drawW;
-                var y2 = pad + (1 - (range > 0 ? (v2 - minValue) / range : 0)) * drawH;
+                var x1 = (gi / (total - 1)) * cw;
+                var y1 = (1 - (range > 0 ? (v1 - minValue) / range : 0)) * ch;
+                var x2 = ((gi + 1) / (total - 1)) * cw;
+                var y2 = (1 - (range > 0 ? (v2 - minValue) / range : 0)) * ch;
 
                 var dx = x2 - x1;
                 var dy = y2 - y1;
@@ -885,25 +1000,7 @@
             });
         }
 
-        function positionXLabels(canvas) {
-            var cw = canvas.clientWidth;
-            var pad = 20;
-            var drawW = cw - pad * 2;
-            var labels = canvas.querySelectorAll('.nc-x-label');
-            labels.forEach(function (lbl) {
-                var i = parseInt(lbl.dataset.labelIndex, 10);
-                var total = parseInt(lbl.dataset.labelTotal, 10);
-                var x = pad + (i / (total - 1)) * drawW;
-                lbl.style.left = x + 'px';
-            });
-        }
-
         function positionAreaFills(canvas) {
-            var cw = canvas.clientWidth;
-            var ch = canvas.clientHeight;
-            var pad = 20;
-            var drawW = cw - pad * 2;
-            var drawH = ch - pad * 2;
             var hasNeg = minValue < 0;
             var range = hasNeg ? valueRange : maxValue;
             var fills = canvas.querySelectorAll('.nc-area-fill');
@@ -918,15 +1015,13 @@
                 var poly = [];
 
                 for (var i = 0; i < total; i++) {
-                    var xPx = pad + (i / (total - 1)) * drawW;
-                    var yPx = pad + (1 - (range > 0 ? (vals[i] - minValue) / range : 0)) * drawH;
-                    poly.push(fix(xPx / cw * 100) + '% ' + fix(yPx / ch * 100) + '%');
+                    var xPct = fix((i / (total - 1)) * 100);
+                    var yPct = fix((1 - (range > 0 ? (vals[i] - minValue) / range : 0)) * 100);
+                    poly.push(xPct + '% ' + yPct + '%');
                 }
                 // Close polygon at bottom-right and bottom-left (at y=0 baseline)
-                var rightX = fix((pad + drawW) / cw * 100);
-                var leftX = fix(pad / cw * 100);
-                poly.push(rightX + '% 100%');
-                poly.push(leftX + '% 100%');
+                poly.push('100% 100%');
+                poly.push('0% 100%');
                 fill.style.clipPath = 'polygon(' + poly.join(',') + ')';
             });
         }
@@ -934,9 +1029,6 @@
         function positionDots(canvas, dots) {
             var cw = canvas.clientWidth;
             var ch = canvas.clientHeight;
-            var pad = 20;
-            var drawW = cw - pad * 2;
-            var drawH = ch - pad * 2;
             var hasNeg = minValue < 0;
             var range = hasNeg ? valueRange : maxValue;
 
@@ -946,16 +1038,16 @@
                 var serie = series[si];
                 var val = serie.values[di];
                 var len = serie.values.length;
-                var x = pad + (di / (len - 1)) * drawW;
-                var y = pad + (1 - (range > 0 ? (val - minValue) / range : 0)) * drawH;
+                var x = (di / (len - 1)) * cw;
+                var y = (1 - (range > 0 ? (val - minValue) / range : 0)) * ch;
                 dot.style.left = x + 'px';
                 dot.style.top = y + 'px';
             });
         }
 
         var resizeObserver = null;
-        var gap = 2;
-        var groupGap = 1;
+        var gap = config.gap !== undefined ? config.gap : 2;
+        var groupGap = Math.max(1, Math.floor(gap / 2));
 
         function toggleLegend(el) {
             var legend = el.querySelector('.nc-legend');
@@ -983,6 +1075,10 @@
             var baseWidth = Math.floor(available / n);
             var remainder = available - baseWidth * n;
             var left = 0;
+
+            // Get matching x-axis labels from footer
+            var xaxis = element.querySelector('.nc-xaxis');
+            var xLabels = xaxis ? xaxis.querySelectorAll('.nc-axis-label') : [];
 
             for (var i = 0; i < n; i++) {
                 var w = baseWidth + (i < remainder ? 1 : 0);
@@ -1014,12 +1110,136 @@
                     el.style.height = '100%';
                 }
 
+                // Position matching x-axis label
+                if (xLabels[i]) {
+                    xLabels[i].style.position = 'absolute';
+                    xLabels[i].style.left = left + 'px';
+                    xLabels[i].style.width = w + 'px';
+                    xLabels[i].style.textAlign = 'center';
+                }
+
                 left += w + gap;
+            }
+
+            // Set xaxis to relative positioning so absolute labels work
+            if (xaxis) {
+                xaxis.style.position = 'relative';
+                xaxis.style.height = '18px';
+            }
+        }
+
+        function sizeBars(canvas) {
+            var children = [];
+            for (var c = 0; c < canvas.children.length; c++) {
+                var ch = canvas.children[c];
+                if (ch.classList.contains('nc-guidelines') || ch.classList.contains('nc-threshold')) continue;
+                children.push(ch);
+            }
+            var n = children.length;
+            if (!n) return;
+
+            var totalGap = gap * (n - 1);
+            var available = canvas.clientHeight - totalGap;
+            var baseHeight = Math.floor(available / n);
+            var remainder = available - baseHeight * n;
+            var top = 0;
+
+            var yaxis = element.querySelector('.nc-yaxis');
+            var yLabels = [];
+            if (yaxis) {
+                for (var y = 0; y < yaxis.children.length; y++) {
+                    yLabels.push(yaxis.children[y]);
+                }
+            }
+
+            for (var i = 0; i < n; i++) {
+                var h = baseHeight + (i < remainder ? 1 : 0);
+                var el = children[i];
+                el.style.position = 'absolute';
+                el.style.top = top + 'px';
+                el.style.height = h + 'px';
+
+                if (el.classList.contains('nc-group') || el.classList.contains('nc-stack')) {
+                    el.style.left = '0';
+                    el.style.width = '100%';
+
+                    // Size items within groups
+                    if (el.classList.contains('nc-group')) {
+                        var items = [];
+                        for (var gi = 0; gi < el.children.length; gi++) {
+                            if (el.children[gi].classList.contains('nc-item')) items.push(el.children[gi]);
+                        }
+                        var gn = items.length;
+                        if (gn > 0) {
+                            var gTotalGap = groupGap * (gn - 1);
+                            var gAvail = h - gTotalGap;
+                            var gBase = Math.floor(gAvail / gn);
+                            var gRem = gAvail - gBase * gn;
+                            var gTop = 0;
+                            for (var j = 0; j < gn; j++) {
+                                var gh = gBase + (j < gRem ? 1 : 0);
+                                items[j].style.position = 'absolute';
+                                items[j].style.left = '0';
+                                items[j].style.top = gTop + 'px';
+                                items[j].style.height = gh + 'px';
+                                gTop += gh + groupGap;
+                            }
+                        }
+                    }
+                } else if (type !== 'waterfall') {
+                    el.style.left = '0';
+                }
+
+                if (yLabels[i]) {
+                    yLabels[i].style.flex = 'none';
+                    yLabels[i].style.height = h + 'px';
+                }
+
+                top += h + gap;
+            }
+
+            if (yaxis) {
+                yaxis.style.gap = gap + 'px';
+            }
+        }
+
+        function sizeTreemap(plot) {
+            var cells = plot.querySelectorAll('.nc-treemap-cell');
+            if (!cells.length) return;
+
+            var pw = plot.clientWidth;
+            var ph = plot.clientHeight;
+            var halfGap = gap / 2;
+
+            for (var i = 0; i < cells.length; i++) {
+                var cell = cells[i];
+                // Store original percentages on first call
+                if (!cell.dataset.xPct) {
+                    cell.dataset.xPct = parseFloat(cell.style.left);
+                    cell.dataset.yPct = parseFloat(cell.style.top);
+                    cell.dataset.wPct = parseFloat(cell.style.width);
+                    cell.dataset.hPct = parseFloat(cell.style.height);
+                }
+
+                var xPct = parseFloat(cell.dataset.xPct) / 100;
+                var yPct = parseFloat(cell.dataset.yPct) / 100;
+                var wPct = parseFloat(cell.dataset.wPct) / 100;
+                var hPct = parseFloat(cell.dataset.hPct) / 100;
+
+                var x = Math.round(xPct * pw + halfGap);
+                var y = Math.round(yPct * ph + halfGap);
+                var x2 = Math.round((xPct + wPct) * pw - halfGap);
+                var y2 = Math.round((yPct + hPct) * ph - halfGap);
+
+                cell.style.left = x + 'px';
+                cell.style.top = y + 'px';
+                cell.style.width = Math.max(0, x2 - x) + 'px';
+                cell.style.height = Math.max(0, y2 - y) + 'px';
             }
         }
 
         if (type === 'column') {
-            var colCanvas = element.querySelector('.nc-canvas');
+            var colCanvas = element.querySelector('.nc-plot');
             sizeColumns(colCanvas);
 
             var colResizeRaf;
@@ -1044,15 +1264,136 @@
             }
         }
 
+        if (type === 'bar' || type === 'waterfall') {
+            var barCanvas = element.querySelector('.nc-plot');
+            sizeBars(barCanvas);
+
+            var barResizeRaf;
+            var onBarResize = function () {
+                if (barResizeRaf) cancelAnimationFrame(barResizeRaf);
+                barResizeRaf = requestAnimationFrame(function () {
+                    sizeBars(barCanvas);
+                    toggleLegend(element);
+                });
+            };
+
+            if (typeof ResizeObserver !== 'undefined') {
+                resizeObserver = new ResizeObserver(onBarResize);
+                resizeObserver.observe(element);
+            } else {
+                resizeHandler = onBarResize;
+                window.addEventListener('resize', resizeHandler);
+            }
+
+            // Sync highlight between plot items and y-axis labels
+            if (config.highlight) {
+                var hlYaxis = element.querySelector('.nc-yaxis');
+                if (hlYaxis) {
+                    var hlChildren = [];
+                    for (var hi = 0; hi < barCanvas.children.length; hi++) {
+                        var hc = barCanvas.children[hi];
+                        if (!hc.classList.contains('nc-guidelines') && !hc.classList.contains('nc-threshold')) {
+                            hlChildren.push(hc);
+                        }
+                    }
+
+                    var hlLabels = [];
+                    for (var hi = 0; hi < hlYaxis.children.length; hi++) {
+                        hlLabels.push(hlYaxis.children[hi]);
+                    }
+
+                    function hlFindIndex(target, container, children) {
+                        var el = target.closest('.nc-item, .nc-group, .nc-stack');
+                        if (!el) return -1;
+                        if (el.classList.contains('nc-item') && el.parentElement !== container) {
+                            el = el.parentElement;
+                        }
+                        return children.indexOf(el);
+                    }
+
+                    function hlDimLabels(idx) {
+                        for (var i = 0; i < hlLabels.length; i++) {
+                            hlLabels[i].style.opacity = i === idx ? '1' : '.3';
+                            hlLabels[i].style.transition = 'opacity .25s';
+                        }
+                    }
+
+                    function hlDimItems(idx) {
+                        for (var i = 0; i < hlChildren.length; i++) {
+                            hlChildren[i].style.opacity = i === idx ? '1' : '.3';
+                            hlChildren[i].style.transition = 'opacity .25s';
+                        }
+                    }
+
+                    function hlClear() {
+                        for (var i = 0; i < hlLabels.length; i++) {
+                            hlLabels[i].style.opacity = '';
+                            hlLabels[i].style.transition = '';
+                        }
+                        for (var i = 0; i < hlChildren.length; i++) {
+                            hlChildren[i].style.opacity = '';
+                            hlChildren[i].style.transition = '';
+                        }
+                    }
+
+                    // Hovering items → dim labels
+                    barCanvas.addEventListener('mouseover', function (e) {
+                        var idx = hlFindIndex(e.target, barCanvas, hlChildren);
+                        if (idx >= 0) hlDimLabels(idx);
+                    });
+                    barCanvas.addEventListener('mouseleave', hlClear);
+
+                    // Hovering labels → dim items and labels
+                    hlYaxis.addEventListener('mouseover', function (e) {
+                        var label = e.target.closest('.nc-label-item, .nc-label-group');
+                        if (!label) return;
+                        // Find index: label-group wraps label-item, so check the direct child
+                        var directChild = label.classList.contains('nc-label-group') ? label : label.parentElement;
+                        if (directChild.classList.contains('nc-label-group')) {
+                            var idx = hlLabels.indexOf(directChild);
+                        } else {
+                            var idx = hlLabels.indexOf(label);
+                        }
+                        if (idx >= 0) {
+                            hlDimLabels(idx);
+                            hlDimItems(idx);
+                        }
+                    });
+                    hlYaxis.addEventListener('mouseleave', hlClear);
+                }
+            }
+        }
+
+        if (type === 'treemap') {
+            var treemapPlot = element.querySelector('.nc-plot');
+            sizeTreemap(treemapPlot);
+
+            var tmResizeRaf;
+            var onTmResize = function () {
+                if (tmResizeRaf) cancelAnimationFrame(tmResizeRaf);
+                tmResizeRaf = requestAnimationFrame(function () {
+                    sizeTreemap(treemapPlot);
+                    toggleLegend(element);
+                });
+            };
+
+            if (typeof ResizeObserver !== 'undefined') {
+                resizeObserver = new ResizeObserver(onTmResize);
+                resizeObserver.observe(element);
+            } else {
+                resizeHandler = onTmResize;
+                window.addEventListener('resize', resizeHandler);
+            }
+        }
+
         if (type === 'line' || type === 'area') {
-            var canvas = element.querySelector('.nc-canvas');
+            var canvas = element.querySelector('.nc-plot');
             var segs = canvas.querySelectorAll('.nc-line-segment');
             var dots = canvas.querySelectorAll('.nc-dot');
 
             positionSegments(canvas, segs);
             positionDots(canvas, dots);
             positionAreaFills(canvas);
-            positionXLabels(canvas);
 
             var resizeRaf;
             var onResize = function () {
@@ -1064,7 +1405,6 @@
                     positionSegments(canvas, segs);
                     positionDots(canvas, dots);
                     positionAreaFills(canvas);
-                    positionXLabels(canvas);
                     toggleLegend(element);
                     canvas.offsetHeight;
                     canvas.style.transition = '';

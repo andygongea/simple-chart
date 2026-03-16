@@ -15,8 +15,8 @@
         .dashboard-header { display: flex; align-items: flex-end; justify-content: space-between; padding-bottom: 32px; margin-bottom: 36px; border-bottom: 1px solid rgba(255,255,255,.04); }
         .dashboard-header h1 { font-size: 22px; font-weight: 700; color: #fff; letter-spacing: -0.3px; display: flex; align-items: center; gap: 12px; }
         .header-icon { width: 32px; height: 32px; border-radius: 8px; background: linear-gradient(135deg, #00e5ff, #0090a8); display: flex; align-items: center; justify-content: center; font-size: 15px; box-shadow: 0 0 20px rgba(0,229,255,.2); }
-        .dashboard-header .meta { font-size: 12px; color: rgba(255,255,255,.25); letter-spacing: 0.3px; }
-        .dashboard-header .meta span { color: rgba(0,229,255,.5); }
+        .dashboard-header .meta { font-size: 12px; color: rgba(255,255,255,.5); letter-spacing: 0.3px; }
+        .dashboard-header .meta span { color: rgba(0,229,255,.7); }
 
         /* Grid */
         .grid { display: grid; gap: 20px; margin-bottom: 20px; }
@@ -26,10 +26,13 @@
 
         /* Cards */
         .card, .stat-card { background: rgba(14,14,24,.8); border: 1px solid rgba(255,255,255,.04); border-radius: 10px; position: relative; overflow: hidden; transition: border-color .2s; }
+        .grid .card { display: flex; flex-direction: column; }
+        .grid .card > [class^="chart-"] { flex: 1; min-height: 0; display: flex; }
+        .grid .card > [class^="chart-"] > .nc-chart { flex: 1; }
         .card:hover, .stat-card:hover { border-color: rgba(255,255,255,.08); }
         .card::before, .stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; }
         .card-header { padding: 18px 22px 0; display: flex; align-items: center; justify-content: space-between; }
-        .card-header .card-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; color: rgba(255,255,255,.3); }
+        .card-header .card-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; color: rgba(255,255,255,.5); }
         .card-header .card-tag { font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; padding: 3px 8px; border-radius: 3px; }
         .tag-critical { background: rgba(239,68,68,.1); color: #f87171; }
         .tag-info { background: rgba(0,229,255,.08); color: rgba(0,229,255,.7); }
@@ -48,7 +51,7 @@
         /* Stat Row */
         .stat-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; margin-bottom: 28px; }
         .stat-card { padding: 22px 20px 18px; }
-        .stat-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; color: rgba(255,255,255,.25); margin-bottom: 10px; }
+        .stat-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; color: rgba(255,255,255,.5); margin-bottom: 10px; }
         .stat-value { font-size: 28px; font-weight: 800; color: #fff; line-height: 1; letter-spacing: -0.5px; }
         .stat-value.neon-red { color: #f87171; text-shadow: 0 0 30px rgba(239,68,68,.2); }
         .stat-value.neon-amber { color: #fbbf24; text-shadow: 0 0 30px rgba(251,191,36,.2); }
@@ -61,7 +64,7 @@
 
         /* Section Dividers */
         .section { margin-top: 36px; }
-        .section-title { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 2px; color: rgba(255,255,255,.2); margin-bottom: 14px; padding-left: 2px; }
+        .section-title { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 2px; color: rgba(255,255,255,.5); margin-bottom: 14px; padding-left: 2px; }
 
         /* Gauge Row */
         .gauge-row { display: flex; gap: 20px; justify-content: center; }
@@ -71,9 +74,9 @@
 
         /* Footer */
         footer { text-align: center; padding: 48px 0 16px; }
-        footer p { font-size: 11px; color: rgba(255,255,255,.15); }
-        footer a { color: rgba(0,229,255,.35); text-decoration: none; transition: color .2s; }
-        footer a:hover { color: rgba(0,229,255,.6); }
+        footer p { font-size: 11px; color: rgba(255,255,255,.5); }
+        footer a { color: rgba(0,229,255,.7); text-decoration: none; transition: color .2s; }
+        footer a:hover { color: rgba(0,229,255,.85); }
     </style>
 </head>
 <body>
@@ -348,7 +351,8 @@
             title: { text: 'Severity Distribution', align: 'center' },
             type: 'progress',
             highlight: true,
-            layout: { width: '100%', height: '220px' },
+            fit: true,
+            layout: { width: '100%', height: '280px' },
             data: {
                 series: [{
                     title: 'Severity',
