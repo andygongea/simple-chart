@@ -243,11 +243,12 @@ neoCharts('.chart', {
 
 ![Gauge Chart](demo/screenshots/gauge-chart.png)
 
-Circular gauge with animated fill. Series values are `[current, min, max]`.
+Circular gauge with animated fill. Series values are `[current, min, max]`. Ring thickness and value font size are configurable via the `gauge` option.
 
 ```js
 neoCharts('.chart', {
     type: 'gauge',
+    gauge: { thickness: 12, valueFontSize: 44 },
     layout: { width: '280px', height: '280px' },
     data: {
         series: [{
@@ -268,10 +269,17 @@ neoCharts('.chart', {
 |---|---|---|---|
 | `type` | string | `'column'` | Chart type: `column`, `bar`, `progress`, `waterfall`, `line`, `area`, `heatmap`, `treemap`, `gauge` |
 | `cssClass` | string | `''` | Additional CSS class on the chart container |
-| `highlight` | boolean | `false` | Dim sibling items on hover |
+| `highlight` | boolean | `false` | Dim sibling items on hover (bidirectional for bar/waterfall labels) |
 | `animate` | boolean | `true` | Animate items on initial render |
 | `legend` | boolean | `true` | Show legend when multiple series exist |
+| `smooth` | boolean | `false` | Use smooth curves for line/area charts |
+| `fit` | boolean | `false` | Fit chart to container |
+| `gap` | number | `2` | Gap in pixels between chart items (bar, column, treemap) |
+| `theme` | string | `'dark'` | Color theme: `'dark'` or `'light'` |
+| `gauge.thickness` | number | `14` | Gauge ring thickness in pixels |
+| `gauge.valueFontSize` | number | `48` | Gauge value font size in pixels |
 | `title.text` | string | `'Neo Charts'` | Chart title text |
+| `title.subtitle` | string | `''` | Subtitle text below the title |
 | `title.align` | string | `'right'` | Title alignment: `left`, `center`, `right` |
 | `layout.width` | string | `'100%'` | Chart width (CSS value) |
 | `layout.height` | string | `'300px'` | Chart height (CSS value or `'auto'`) |
@@ -281,6 +289,8 @@ neoCharts('.chart', {
 | `data.render.stacked` | boolean | `false` | Stack multiple series (column/bar) |
 | `data.render.threshold` | array | `[]` | Threshold lines |
 | `data.series` | array | `[]` | Array of series objects |
+| `onClick` | function | `null` | Callback when a chart item is clicked |
+| `onHover` | function | `null` | Callback when a chart item is hovered |
 
 ### Series Object
 
@@ -290,10 +300,16 @@ neoCharts('.chart', {
 | `values` | number[] | Data values |
 | `labels` | string[] | Label for each value |
 | `outputValues` | string[] | Custom display values (e.g. `['1.2K', '3.4M']`). Falls back to raw values if empty. |
-| `color` | string[] | One color for the whole series, or one per item |
+| `color` | string[] | One color for the whole series, or one per item. When omitted, a built-in 10-color palette is used automatically. |
 | `prefix` | string | Prepended to displayed values (e.g. `'$'`) |
 | `suffix` | string | Appended to displayed values (e.g. `'%'`) |
 | `decimals` | number | Decimal places in tooltips (default: `3`) |
+
+### Default Color Palette
+
+When no `color` array is provided, items cycle through this 10-color palette:
+
+`#3b82f6` `#10b981` `#f59e0b` `#ef4444` `#8b5cf6` `#ec4899` `#06b6d4` `#f97316` `#6366f1` `#14b8a6`
 
 ## API
 
@@ -310,13 +326,18 @@ neoCharts('.chart', {
 - **Zero dependencies** — no jQuery, no D3, no build step required
 - **Pure CSS rendering** — all chart elements are styled DOM nodes, no SVG or Canvas
 - **Responsive** — charts resize with their container via ResizeObserver
+- **Pixel-perfect** — integer pixel sizing with remainder distribution for crisp rendering
 - **Animated** — entry animations and smooth hover transitions
-- **Interactive** — tooltips on hover with highlight mode to dim siblings
+- **Interactive** — tooltips on hover, highlight mode with bidirectional label sync (bar/waterfall)
+- **Configurable** — gap between items, gauge thickness, default color palette, light/dark themes
 - **9 chart types** — column, bar, line, area, progress, waterfall, heatmap, treemap, gauge
+- **Multi-series** — grouped and stacked modes for column and bar charts
 
-## Demo
+## Demos
 
-Open [demo/index.html](demo/index.html) in a browser to see all chart types in action.
+- [demo/index.html](demo/index.html) — all chart types
+- [demo/security-analytics.html](demo/security-analytics.html) — full security dashboard (18 charts)
+- [demo/security-analytics-glass.html](demo/security-analytics-glass.html) — glass/frosted theme variant
 
 ## License
 

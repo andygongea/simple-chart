@@ -43,6 +43,9 @@
         .grid-2 { grid-template-columns: 1fr 1fr; }
         .grid-3 { grid-template-columns: 1fr 1fr 1fr; }
         .grid-1 { grid-template-columns: 1fr; }
+        .grid .card { display: flex; flex-direction: column; }
+        .grid .card > [class^="chart-"] { flex: 1; min-height: 0; display: flex; }
+        .grid .card > [class^="chart-"] > .nc-chart { flex: 1; }
 
         /* Glass Cards */
         .card, .stat-card {
@@ -50,7 +53,6 @@
             border: 1px solid rgba(255,255,255,.1);
             border-radius: 16px;
             position: relative;
-            overflow: hidden;
             transition: border-color .25s, background .25s, box-shadow .25s;
             backdrop-filter: blur(40px) saturate(1.8);
             -webkit-backdrop-filter: blur(40px) saturate(1.8);
@@ -131,11 +133,6 @@
         .nc-tooltip-arrow {
             background-color: rgba(30,20,50,.75) !important;
             border-color: rgba(255,255,255,.12) !important;
-        }
-        .nc-gauge .nc-ring-inner {
-            background-color: rgba(30,20,50,.7) !important;
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
         }
         .nc-dot {
             background-color: rgba(30,20,50,.7) !important;
@@ -272,7 +269,70 @@
             </div>
         </div>
 
-        <!-- Row 5: LLM Vuln Rates + Zero Days -->
+        <!-- Row 5: Multi-Series Line & Area -->
+        <div class="section">
+            <div class="section-title">Multi-Series Trends</div>
+            <div class="grid grid-2">
+                <div class="card accent-cyan">
+                    <div class="card-header">
+                        <span class="card-label">Incident Response by Category</span>
+                        <span class="card-tag tag-info">Line</span>
+                    </div>
+                    <div class="chart-incidents-line"></div>
+                </div>
+                <div class="card accent-purple">
+                    <div class="card-header">
+                        <span class="card-label">Threat Volume by Source</span>
+                        <span class="card-tag tag-warning">Area</span>
+                    </div>
+                    <div class="chart-threats-area"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Row 6: Multi-Series Column & Bar -->
+        <div class="section">
+            <div class="section-title">Multi-Series Comparisons</div>
+            <div class="grid grid-2">
+                <div class="card accent-red">
+                    <div class="card-header">
+                        <span class="card-label">Vulnerabilities by Severity &amp; Quarter</span>
+                        <span class="card-tag tag-critical">Grouped Column</span>
+                    </div>
+                    <div class="chart-vuln-quarter-col"></div>
+                </div>
+                <div class="card accent-sky">
+                    <div class="card-header">
+                        <span class="card-label">Incidents by Team</span>
+                        <span class="card-tag tag-info">Grouped Bar</span>
+                    </div>
+                    <div class="chart-team-bar"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Row 7: Stacked Column & Bar -->
+        <div class="section">
+            <div class="section-title">Stacked Comparisons</div>
+            <div class="grid grid-2">
+                <div class="card accent-green">
+                    <div class="card-header">
+                        <span class="card-label">Resolved vs Pending by Quarter</span>
+                        <span class="card-tag tag-success">Stacked Column</span>
+                    </div>
+                    <div class="chart-stacked-col"></div>
+                </div>
+                <div class="card accent-rose">
+                    <div class="card-header">
+                        <span class="card-label">Alert Sources by Severity</span>
+                        <span class="card-tag tag-critical">Stacked Bar</span>
+                    </div>
+                    <div class="chart-stacked-bar"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Row 8: LLM Vuln Rates + Zero Days -->
         <div class="section">
             <div class="section-title">AI Code Security &amp; Zero-Day Trends</div>
             <div class="grid grid-2">
@@ -358,7 +418,8 @@
             title: { text: 'Severity Distribution', align: 'center' },
             type: 'progress',
             highlight: true,
-            layout: { width: '100%', height: '220px' },
+            fit: true,
+            layout: { width: '100%', height: '280px' },
             data: {
                 series: [{
                     title: 'Severity',
@@ -484,7 +545,210 @@
             }
         });
 
-        // 9. LLM Insecure Code Rates (Column)
+        // 9. Multi-Series Line — Incident Response
+        neoCharts('.chart-incidents-line', {
+            title: { text: 'Incident Response by Category', align: 'center' },
+            type: 'line',
+            highlight: true,
+            smooth: false,
+            layout: { width: '100%', height: '280px' },
+            data: {
+                series: [
+                    {
+                        title: 'Malware',
+                        values: [320, 280, 310, 350, 410, 390, 420, 460, 430, 400, 380, 450],
+                        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                        color: [red],
+                        decimals: 0
+                    },
+                    {
+                        title: 'Phishing',
+                        values: [180, 210, 250, 230, 270, 310, 290, 340, 320, 350, 380, 360],
+                        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                        color: [amber],
+                        decimals: 0
+                    },
+                    {
+                        title: 'Ransomware',
+                        values: [90, 110, 95, 130, 150, 140, 170, 190, 160, 180, 200, 220],
+                        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                        color: [purple],
+                        decimals: 0
+                    }
+                ]
+            }
+        });
+
+        // 10. Multi-Series Area — Threat Volume
+        neoCharts('.chart-threats-area', {
+            title: { text: 'Threat Volume by Source', align: 'center' },
+            type: 'area',
+            highlight: true,
+            smooth: false,
+            layout: { width: '100%', height: '280px' },
+            data: {
+                series: [
+                    {
+                        title: 'External',
+                        values: [1200, 1350, 1100, 1400, 1550, 1480, 1600, 1700, 1650, 1500, 1420, 1800],
+                        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                        color: [cyan],
+                        decimals: 0
+                    },
+                    {
+                        title: 'Internal',
+                        values: [400, 380, 420, 450, 470, 440, 490, 510, 480, 460, 500, 530],
+                        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                        color: [rose],
+                        decimals: 0
+                    },
+                    {
+                        title: 'Partner/3rd Party',
+                        values: [150, 180, 160, 200, 220, 210, 240, 260, 230, 250, 270, 290],
+                        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                        color: [amber],
+                        decimals: 0
+                    }
+                ]
+            }
+        });
+
+        // 11. Multi-Series Grouped Column — Vulns by Severity & Quarter
+        neoCharts('.chart-vuln-quarter-col', {
+            title: { text: 'Vulnerabilities by Severity & Quarter', align: 'center' },
+            type: 'column',
+            highlight: true,
+            layout: { width: '100%', height: '280px' },
+            data: {
+                render: { margin: 0.3 },
+                series: [
+                    {
+                        title: 'Critical',
+                        values: [820, 950, 1100, 1080],
+                        labels: ['Q1', 'Q2', 'Q3', 'Q4'],
+                        color: [red],
+                        decimals: 0
+                    },
+                    {
+                        title: 'High',
+                        values: [3200, 3500, 3800, 4100],
+                        labels: ['Q1', 'Q2', 'Q3', 'Q4'],
+                        color: [amber],
+                        decimals: 0
+                    },
+                    {
+                        title: 'Medium',
+                        values: [5400, 5800, 6100, 6460],
+                        labels: ['Q1', 'Q2', 'Q3', 'Q4'],
+                        color: [sky],
+                        decimals: 0
+                    }
+                ]
+            }
+        });
+
+        // 12. Multi-Series Grouped Bar — Incidents by Team
+        neoCharts('.chart-team-bar', {
+            title: { text: 'Incidents Handled by Team', align: 'center' },
+            type: 'bar',
+            highlight: true,
+            layout: { width: '100%' },
+            data: {
+                series: [
+                    {
+                        title: 'SOC',
+                        values: [245, 198, 310, 175, 220],
+                        labels: ['Malware', 'Phishing', 'DDoS', 'Insider', 'Ransomware'],
+                        color: [cyan],
+                        decimals: 0
+                    },
+                    {
+                        title: 'IR Team',
+                        values: [180, 95, 120, 210, 290],
+                        labels: ['Malware', 'Phishing', 'DDoS', 'Insider', 'Ransomware'],
+                        color: [purple],
+                        decimals: 0
+                    },
+                    {
+                        title: 'Red Team',
+                        values: [60, 45, 30, 85, 110],
+                        labels: ['Malware', 'Phishing', 'DDoS', 'Insider', 'Ransomware'],
+                        color: [rose],
+                        decimals: 0
+                    }
+                ]
+            }
+        });
+
+        // 13. Stacked Column — Resolved vs Pending
+        neoCharts('.chart-stacked-col', {
+            title: { text: 'Resolved vs Pending by Quarter', align: 'center' },
+            type: 'column',
+            highlight: true,
+            layout: { width: '100%', height: '280px' },
+            data: {
+                render: { stacked: true, margin: 0.3 },
+                series: [
+                    {
+                        title: 'Resolved',
+                        values: [3800, 4200, 4600, 5100],
+                        labels: ['Q1', 'Q2', 'Q3', 'Q4'],
+                        color: [green],
+                        decimals: 0
+                    },
+                    {
+                        title: 'Pending',
+                        values: [1200, 980, 850, 620],
+                        labels: ['Q1', 'Q2', 'Q3', 'Q4'],
+                        color: [amber],
+                        decimals: 0
+                    },
+                    {
+                        title: 'Escalated',
+                        values: [400, 350, 420, 380],
+                        labels: ['Q1', 'Q2', 'Q3', 'Q4'],
+                        color: [red],
+                        decimals: 0
+                    }
+                ]
+            }
+        });
+
+        // 14. Stacked Bar — Alert Sources by Severity
+        neoCharts('.chart-stacked-bar', {
+            title: { text: 'Alert Sources by Severity', align: 'center' },
+            type: 'bar',
+            highlight: true,
+            layout: { width: '100%' },
+            data: {
+                render: { stacked: true },
+                series: [
+                    {
+                        title: 'Critical',
+                        values: [85, 120, 65, 45, 30],
+                        labels: ['SIEM', 'EDR', 'WAF', 'IDS', 'Email Gateway'],
+                        color: [red],
+                        decimals: 0
+                    },
+                    {
+                        title: 'High',
+                        values: [210, 180, 150, 120, 90],
+                        labels: ['SIEM', 'EDR', 'WAF', 'IDS', 'Email Gateway'],
+                        color: [amber],
+                        decimals: 0
+                    },
+                    {
+                        title: 'Medium',
+                        values: [450, 320, 280, 240, 380],
+                        labels: ['SIEM', 'EDR', 'WAF', 'IDS', 'Email Gateway'],
+                        color: [sky],
+                        decimals: 0
+                    }
+                ]
+            }
+        });
+
+        // 15. LLM Insecure Code Rates (Column)
         neoCharts('.chart-llm', {
             title: { text: 'LLM Insecure Code Generation (%)', align: 'center' },
             type: 'column',
@@ -544,6 +808,7 @@
         neoCharts('.gauge-patch', {
             title: { text: '' },
             type: 'gauge',
+            gauge: { thickness: 10, valueFontSize: 32 },
             layout: { width: '220px', height: '220px' },
             data: {
                 series: [{
@@ -561,6 +826,7 @@
         neoCharts('.gauge-coverage', {
             title: { text: '' },
             type: 'gauge',
+            gauge: { thickness: 5, valueFontSize: 32 },
             layout: { width: '220px', height: '220px' },
             data: {
                 series: [{
@@ -578,6 +844,7 @@
         neoCharts('.gauge-risk', {
             title: { text: '' },
             type: 'gauge',
+            gauge: { thickness: 5, valueFontSize: 32 },
             layout: { width: '220px', height: '220px' },
             data: {
                 series: [{

@@ -30,6 +30,10 @@
         },
         gap: 2,
         fit: false,
+        gauge: {
+            thickness: 14,
+            valueFontSize: 48
+        },
         highlight: false,
         animate: true,
         legend: true,
@@ -97,15 +101,20 @@
         return parseFloat(value.toFixed(3)).toString();
     }
 
+    var defaultPalette = [
+        '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6',
+        '#ec4899', '#06b6d4', '#f97316', '#6366f1', '#14b8a6'
+    ];
+
     function getColor(colorArray, i) {
-        if (colorArray.length === 0) return '';
+        if (colorArray.length === 0) return 'background-color:' + defaultPalette[i % defaultPalette.length] + ';';
         var c = colorArray.length === 1 ? colorArray[0] : (colorArray[i] || colorArray[colorArray.length - 1]);
         return 'background-color:' + c + ';';
     }
 
     function getColorValue(colorArray, i) {
-        if (colorArray.length === 0) return '#00aeef';
-        return colorArray.length === 1 ? colorArray[0] : (colorArray[i] || '#00aeef');
+        if (colorArray.length === 0) return defaultPalette[i % defaultPalette.length];
+        return colorArray.length === 1 ? colorArray[0] : (colorArray[i] || defaultPalette[i % defaultPalette.length]);
     }
 
     function neoCharts(element, options) {
@@ -732,11 +741,10 @@
             var range = max - min;
             var pct = range > 0 ? ((current - min) / range) : 0;
             var color = serie.color.length > 0 ? serie.color[0] : '#00aeef';
-            var trackColor = 'rgba(255,255,255,.1)';
+            var trackColor = 'rgba(128,128,128,.15)';
             var gapDeg = 30;
             var startDeg = 180 + gapDeg;
             var arcDeg = 360 - gapDeg * 2;
-
             var displayStr = String(value);
             var numMatch = displayStr.match(/^([^0-9]*?)([\d.]+)(.*)$/);
             var valueSuffix = numMatch ? numMatch[3] : '';
@@ -748,11 +756,11 @@
                 + ' data-value-prefix="' + escapeHtml(numMatch ? numMatch[1] : '') + '"'
                 + ' data-value-suffix="' + escapeHtml(valueSuffix) + '"'
                 + ' data-value-decimals="' + (numMatch && numMatch[2].indexOf('.') !== -1 ? numMatch[2].split('.')[1].length : 0) + '">'
-                + '<div class="nc-ring-inner"></div>'
+                + '</div>'
                 + '<div class="nc-ring-content">'
                 + '<span class="nc-label">' + escapeHtml(serie.title) + '</span>'
                 + '<span class="nc-value">0' + escapeHtml(valueSuffix) + '</span>'
-                + '</div></div>';
+                + '</div>';
         }
 
         function renderLegend() {
@@ -839,7 +847,11 @@
             chartTemplate += yHtml;
         }
 
-        chartTemplate += '<div class="nc-canvas nc-plot">';
+        var plotStyle = '';
+        if (type === 'gauge') {
+            plotStyle = ' style="--gauge-thickness:' + config.gauge.thickness + 'px;--gauge-value-size:' + config.gauge.valueFontSize + 'px"';
+        }
+        chartTemplate += '<div class="nc-canvas nc-plot"' + plotStyle + '>';
         if (!skipGuidelines) {
             if (render.threshold && render.threshold.length) {
                 chartTemplate += renderThreshold();
@@ -1434,7 +1446,7 @@
                 var gPre = ring.dataset.valuePrefix;
                 var gSuf = ring.dataset.valueSuffix;
                 var gDec = parseInt(ring.dataset.valueDecimals, 10);
-                var gValEl = ring.querySelector('.nc-value');
+                var gValEl = element.querySelector('.nc-ring-content .nc-value');
                 var gDuration = 1000;
                 var gStartTime = null;
 

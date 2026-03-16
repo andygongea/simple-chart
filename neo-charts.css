@@ -65,13 +65,13 @@
 
 /* Bar */
 .nc-bar .nc-chart-body { display:grid; grid-template-columns:auto 1fr; grid-template-rows:1fr auto; gap:16px; }
-.nc-bar .nc-yaxis { grid-column:1; grid-row:1; display:flex; flex-direction:column; justify-content:stretch; min-width:0; }
-.nc-bar .nc-yaxis .nc-label-item { flex:1; display:flex; align-items:center; justify-content:flex-end; font-size:12px; color:var(--nc-text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-height:0; cursor:pointer; }
-.nc-bar .nc-yaxis .nc-label-group { flex:1; display:flex; align-items:center; justify-content:flex-end; font-size:12px; font-weight:600; color:var(--nc-text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-height:0; cursor:pointer; }
+.nc-bar .nc-yaxis { grid-column:1; grid-row:1; display:flex; flex-direction:column; justify-content:stretch; min-width:0; max-width:150px; }
+.nc-bar .nc-yaxis .nc-label-item { flex:1; display:block; font-size:12px; color:var(--nc-text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; text-align:right; min-height:0; cursor:pointer; line-height:1; }
+.nc-bar .nc-yaxis .nc-label-group { flex:1; display:flex; align-items:center; justify-content:flex-end; font-size:12px; font-weight:600; color:var(--nc-text-muted); min-height:0; cursor:pointer; min-width:0; }
 .nc-bar .nc-plot { grid-column:2; grid-row:1; position:relative; min-height:0; min-width:0; overflow:visible; }
 .nc-bar .nc-group { position:relative; }
 .nc-bar .nc-stack { display:flex; flex:1; }
-.nc-bar .nc-item { border-radius:15px; background-image:linear-gradient(270deg, rgba(255,255,255,.15), transparent); position:relative; min-height:0; }
+.nc-bar .nc-item { border-radius:15px; position:relative; min-height:0; }
 .nc-bar .nc-main .nc-value { position:absolute; left:100%; top:50%; transform:translateY(-50%); padding-left:6px; white-space:nowrap; font-size:12px; }
 .nc-bar .nc-tooltip { left:auto; right:0; transform:none; bottom:100%; margin-bottom:4px; }
 .nc-bar .nc-tooltip .nc-tooltip-arrow { left:auto; right:16px; }
@@ -85,19 +85,20 @@
 .nc-progress .nc-chart-body { justify-content:center; }
 .nc-progress .nc-plot { position:relative; width:100%; height:20px; margin:30px 0; flex-shrink:0; }
 .nc-progress.is-fit .nc-plot { height:auto; flex:1; margin:30px 0; }
-.nc-progress .nc-item { position:absolute; height:100%; border-right:none; border-top-color:var(--nc-border) }
+.nc-progress .nc-item { position:absolute; height:100%; border-right:none; border-top-color:var(--nc-border); overflow:visible; }
+.nc-progress .nc-main { display:block; position:relative; width:100%; height:100%; }
 .nc-progress .nc-item:first-child { border-radius:3px 0 0 3px }
 .nc-progress .nc-item:last-child { border-radius:0 3px 3px 0 }
-.nc-progress .nc-main .nc-label { position:absolute; bottom:-28px; height:24px; font-size:11px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.nc-progress .nc-main .nc-value { position:absolute; top:-22px; left:0; width:100%; text-align:left; font-size:12px; }
+.nc-progress .nc-main .nc-label { position:absolute; bottom:-28px; left:0; width:100%; height:24px; font-size:11px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.nc-progress .nc-main .nc-value { position:absolute; top:-22px; left:0; width:100%; text-align:left; font-size:12px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .nc-progress .nc-tooltip { bottom:calc(100% + 22px); }
 
 /* Waterfall */
 .nc-waterfall .nc-chart-body { display:grid; grid-template-columns:auto 1fr; grid-template-rows:1fr auto; gap:16px; }
-.nc-waterfall .nc-yaxis { grid-column:1; grid-row:1; display:flex; flex-direction:column; justify-content:stretch; min-width:0; }
-.nc-waterfall .nc-yaxis .nc-label-item { flex:1; display:flex; align-items:center; justify-content:flex-end; font-size:12px; color:var(--nc-text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-height:0; cursor:pointer; }
+.nc-waterfall .nc-yaxis { grid-column:1; grid-row:1; display:flex; flex-direction:column; justify-content:stretch; min-width:0; max-width:150px; }
+.nc-waterfall .nc-yaxis .nc-label-item { flex:1; display:block; font-size:12px; color:var(--nc-text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; text-align:right; min-height:0; cursor:pointer; line-height:1; }
 .nc-waterfall .nc-plot { grid-column:2; grid-row:1; position:relative; min-height:0; min-width:0; overflow:visible; }
-.nc-waterfall .nc-item { position:relative; min-height:0; border-radius:15px; background-image:linear-gradient(270deg, rgba(255,255,255,.15), transparent); }
+.nc-waterfall .nc-item { position:relative; min-height:0; border-radius:15px; }
 .nc-waterfall .nc-main .nc-value { position:absolute; left:100%; top:50%; transform:translateY(-50%); padding-left:6px; white-space:nowrap; font-size:12px; }
 .nc-waterfall .nc-tooltip { left:auto; right:0; transform:none; bottom:100%; margin-bottom:4px; }
 .nc-waterfall .nc-tooltip .nc-tooltip-arrow { left:auto; right:16px; }
@@ -178,8 +179,7 @@
 .nc-gauge.nc-chart { position:relative; background-color:transparent; border-radius:16px; overflow:visible; }
 .nc-gauge .nc-title { padding:0 0 10px; color:var(--nc-text); }
 .nc-gauge .nc-plot { position:relative; flex:1; min-height:0; display:flex; align-items:center; justify-content:center; }
-.nc-gauge .nc-ring { position:relative; border-radius:50%; aspect-ratio:1; height:100%; max-width:100%; }
-.nc-gauge .nc-ring-inner { position:absolute; top:6%; left:6%; width:88%; height:88%; border-radius:50%; background-color:var(--nc-bg, #1a1a2e); }
-.nc-gauge .nc-ring-content { position:absolute; top:0; left:0; width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:1; }
+.nc-gauge .nc-ring { position:relative; border-radius:50%; aspect-ratio:1; height:100%; max-width:100%; -webkit-mask:radial-gradient(circle closest-side, transparent calc(100% - var(--gauge-thickness, 14px)), #000 calc(100% - var(--gauge-thickness, 14px) + 1px)); mask:radial-gradient(circle closest-side, transparent calc(100% - var(--gauge-thickness, 14px)), #000 calc(100% - var(--gauge-thickness, 14px) + 1px)); }
+.nc-gauge .nc-ring-content { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:1; }
 .nc-gauge .nc-ring-content .nc-label { font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:2px; color:var(--nc-text-muted); margin-bottom:4px; }
-.nc-gauge .nc-ring-content .nc-value { font-size:48px; font-weight:700; color:var(--nc-text); line-height:1; }
+.nc-gauge .nc-ring-content .nc-value { font-size:var(--gauge-value-size, 48px); font-weight:700; color:var(--nc-text); line-height:1; }

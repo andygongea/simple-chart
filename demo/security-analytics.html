@@ -25,7 +25,7 @@
         .grid-1 { grid-template-columns: 1fr; }
 
         /* Cards */
-        .card, .stat-card { background: rgba(14,14,24,.8); border: 1px solid rgba(255,255,255,.04); border-radius: 10px; position: relative; overflow: hidden; transition: border-color .2s; }
+        .card, .stat-card { background: rgba(14,14,24,.8); border: 1px solid rgba(255,255,255,.04); border-radius: 10px; position: relative; transition: border-color .2s; }
         .grid .card { display: flex; flex-direction: column; }
         .grid .card > [class^="chart-"] { flex: 1; min-height: 0; display: flex; }
         .grid .card > [class^="chart-"] > .nc-chart { flex: 1; }
@@ -741,6 +741,7 @@
         neoCharts('.gauge-patch', {
             title: { text: '' },
             type: 'gauge',
+            gauge: { thickness: 10, valueFontSize: 40 },
             layout: { width: '220px', height: '220px' },
             data: {
                 series: [{
@@ -758,6 +759,7 @@
         neoCharts('.gauge-coverage', {
             title: { text: '' },
             type: 'gauge',
+            gauge: { thickness: 10, valueFontSize: 40 },
             layout: { width: '220px', height: '220px' },
             data: {
                 series: [{
@@ -775,6 +777,7 @@
         neoCharts('.gauge-risk', {
             title: { text: '' },
             type: 'gauge',
+            gauge: { thickness: 10, valueFontSize: 40 },
             layout: { width: '220px', height: '220px' },
             data: {
                 series: [{
