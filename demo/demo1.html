@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Security Analytics Dashboard 2025 - Neo Charts</title>
+    <link rel="stylesheet" href="../neo-charts.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        /* Theme variables */
+        body {
+            --db-bg: #111113;
+            --db-text: #a0a0a6;
+            --db-heading: #e4e4e7;
+            --db-muted: rgba(255,255,255,.38);
+            --db-card-bg: linear-gradient(145deg, rgba(28,28,30,.95), rgba(22,22,24,.98));
+            --db-card-flat: rgba(25,25,27,.95);
+            --db-card-border: rgba(255,255,255,.06);
+            --db-card-hover: rgba(255,255,255,.1);
+            --db-card-shadow: 0 2px 8px rgba(0,0,0,.5), 0 0 0 1px rgba(255,255,255,.03) inset;
+            --db-nc-bg: rgba(22,22,24,.95);
+            --db-accent: rgba(0,229,255,.7);
+            --db-tag-critical-bg: rgba(239,68,68,.1);
+            --db-tag-critical-text: #f87171;
+            --db-tag-info-bg: rgba(0,229,255,.08);
+            --db-tag-info-text: rgba(0,229,255,.7);
+            --db-tag-warning-bg: rgba(251,191,36,.08);
+            --db-tag-warning-text: rgba(251,191,36,.7);
+            --db-tag-success-bg: rgba(52,211,153,.08);
+            --db-tag-success-text: rgba(52,211,153,.7);
+            --db-neon-red: #f87171;
+            --db-neon-amber: #fbbf24;
+            --db-neon-cyan: #00e5ff;
+            --db-neon-purple: #a855f7;
+            --db-neon-green: #34d399;
+            --db-stat-up: #f87171;
+            --db-stat-down: #34d399;
+            --db-glow: 1;
+            --db-shine: linear-gradient(135deg, rgba(255,255,255,.035) 0%, transparent 40%, transparent 60%, rgba(255,255,255,.015) 100%);
+            background-color: var(--db-bg);
+            color: var(--db-text);
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            transition: background-color .3s, color .3s;
+        }
+
+        /* Light theme */
+        body.light {
+            --db-bg: #ededee;
+            --db-text: #505055;
+            --db-heading: #1c1c1e;
+            --db-muted: rgba(0,0,0,.38);
+            --db-card-bg: linear-gradient(145deg, #ffffff, #f5f5f6);
+            --db-card-flat: #f9f9fa;
+            --db-card-border: rgba(0,0,0,.07);
+            --db-card-hover: rgba(0,0,0,.1);
+            --db-card-shadow: 0 2px 8px rgba(0,0,0,.06), 0 0 0 1px rgba(255,255,255,.6) inset;
+            --db-nc-bg: #f9f9fa;
+            --db-accent: #0891b2;
+            --db-tag-critical-bg: rgba(239,68,68,.08);
+            --db-tag-critical-text: #dc2626;
+            --db-tag-info-bg: rgba(8,145,178,.08);
+            --db-tag-info-text: #0891b2;
+            --db-tag-warning-bg: rgba(217,119,6,.08);
+            --db-tag-warning-text: #b45309;
+            --db-tag-success-bg: rgba(5,150,105,.08);
+            --db-tag-success-text: #047857;
+            --db-neon-red: #dc2626;
+            --db-neon-amber: #d97706;
+            --db-neon-cyan: #0891b2;
+            --db-neon-purple: #7c3aed;
+            --db-neon-green: #059669;
+            --db-stat-up: #dc2626;
+            --db-stat-down: #059669;
+            --db-glow: 0;
+            --db-shine: linear-gradient(135deg, rgba(255,255,255,.7) 0%, transparent 40%, transparent 60%, rgba(255,255,255,.3) 100%);
+        }
+
+        .dashboard { max-width: 1480px; margin: 0 auto; padding: 56px 44px; }
+
+        /* Header */
+        .dashboard-header { display: flex; align-items: flex-end; justify-content: space-between; padding-bottom: 36px; margin-bottom: 44px; border-bottom: 1px solid var(--db-card-border); }
+        .dashboard-header h1 { font-size: 22px; font-weight: 700; color: var(--db-heading); letter-spacing: -0.3px; display: flex; align-items: center; gap: 14px; }
+        .header-icon { width: 34px; height: 34px; border-radius: 9px; background: linear-gradient(135deg, #00e5ff, #0090a8); display: flex; align-items: center; justify-content: center; font-size: 15px; box-shadow: 0 2px 12px rgba(0,229,255,.25); }
+        .dashboard-header .meta { font-size: 12px; color: var(--db-muted); letter-spacing: 0.3px; }
+        .dashboard-header .meta span { color: var(--db-accent); }
+
+        /* Theme toggle */
+        .theme-toggle { background: var(--db-card-flat); border: 1px solid var(--db-card-border); border-radius: 8px; padding: 7px 14px; cursor: pointer; font-size: 12px; font-weight: 600; color: var(--db-muted); letter-spacing: 0.5px; transition: border-color .2s, background .2s, color .2s; display: flex; align-items: center; gap: 6px; box-shadow: var(--db-card-shadow); }
+        .theme-toggle:hover { border-color: var(--db-card-hover); color: var(--db-heading); }
+        .theme-toggle .icon-sun, body.light .theme-toggle .icon-moon { display: none; }
+        body.light .theme-toggle .icon-sun { display: inline; }
+
+        /* Grid */
+        .grid { display: grid; gap: 24px; margin-bottom: 24px; }
+        .grid-2 { grid-template-columns: 1fr 1fr; }
+        .grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+        .grid-1 { grid-template-columns: 1fr; }
+
+        /* Cards */
+        .card, .stat-card { background: var(--db-card-bg); border: 1px solid var(--db-card-border); border-radius: 14px; position: relative; transition: border-color .2s; }
+        .grid .card { display: flex; flex-direction: column; }
+        .grid .card > [class^="chart-"] { flex: 1; min-height: 0; display: flex; }
+        .grid .card > [class^="chart-"] > .nc-chart { flex: 1; }
+        .card:hover, .stat-card:hover { border-color: var(--db-card-hover); }
+        .card-header { padding: 22px 26px 0; display: flex; align-items: center; justify-content: space-between; position: relative; z-index: 1; }
+        .card-header .card-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; color: var(--db-muted); }
+        .card-header .card-tag { font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; padding: 3px 10px; border-radius: 4px; }
+        .tag-critical { background: var(--db-tag-critical-bg); color: var(--db-tag-critical-text); }
+        .tag-info { background: var(--db-tag-info-bg); color: var(--db-tag-info-text); }
+        .tag-warning { background: var(--db-tag-warning-bg); color: var(--db-tag-warning-text); }
+        .tag-success { background: var(--db-tag-success-bg); color: var(--db-tag-success-text); }
+
+        body.light [class*="accent-"]::before { opacity: .4; }
+
+        /* Stat Row */
+        .stat-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 20px; margin-bottom: 36px; }
+        .stat-card { padding: 26px 24px 22px; }
+        .stat-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; color: var(--db-muted); margin-bottom: 12px; }
+        .stat-value { font-size: 30px; font-weight: 800; color: var(--db-heading); line-height: 1; letter-spacing: -0.5px; position: relative; z-index: 1; }
+        .stat-value.neon-red { color: var(--db-neon-red); text-shadow: 0 0 calc(30px * var(--db-glow)) rgba(239,68,68,.2); }
+        .stat-value.neon-amber { color: var(--db-neon-amber); text-shadow: 0 0 calc(30px * var(--db-glow)) rgba(251,191,36,.2); }
+        .stat-value.neon-cyan { color: var(--db-neon-cyan); text-shadow: 0 0 calc(30px * var(--db-glow)) rgba(0,229,255,.2); }
+        .stat-value.neon-purple { color: var(--db-neon-purple); text-shadow: 0 0 calc(30px * var(--db-glow)) rgba(168,85,247,.2); }
+        .stat-value.neon-green { color: var(--db-neon-green); text-shadow: 0 0 calc(30px * var(--db-glow)) rgba(52,211,153,.2); }
+        .stat-change { font-size: 11px; margin-top: 10px; font-weight: 500; position: relative; z-index: 1; }
+        .stat-up { color: var(--db-stat-up); }
+        .stat-down { color: var(--db-stat-down); }
+
+        /* Section Dividers */
+        .section { margin-top: 44px; }
+        .section-title { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 2.5px; color: var(--db-muted); margin-bottom: 18px; padding-left: 2px; }
+
+        /* Gauge Row */
+        .gauge-row { display: flex; gap: 24px; justify-content: center; }
+
+        /* Chart background override */
+        .nc-chart { --nc-bg: var(--db-nc-bg); }
+
+        /* Footer */
+        footer { text-align: center; padding: 56px 0 20px; }
+        footer p { font-size: 11px; color: var(--db-muted); }
+        footer a { color: var(--db-accent); text-decoration: none; transition: color .2s; }
+        footer a:hover { opacity: .8; }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <div class="dashboard-header">
+            <h1>
+                <span class="header-icon">&#9878;</span>
+                Security Analytics Dashboard
+            </h1>
+            <div style="display:flex;align-items:center;gap:16px">
+                <div class="meta">Data: <span>OWASP, Google GTIG, IBM, NVD</span> &middot; FY 2025</div>
+                <button class="theme-toggle" onclick="toggleTheme()">
+                    <span class="icon-moon">&#9789;</span>
+                    <span class="icon-sun">&#9788;</span>
+                    <span class="toggle-label">Theme</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- KPI Row -->
+        <div class="stat-row">
+            <div class="stat-card accent-red">
+                <div class="stat-label">Total CVEs</div>
+                <div class="stat-value neon-red">48,185</div>
+                <div class="stat-change stat-up">+15.2% vs 2024</div>
+            </div>
+            <div class="stat-card accent-amber">
+                <div class="stat-label">Zero-Days Exploited</div>
+                <div class="stat-value neon-amber">90</div>
+                <div class="stat-change stat-up">+20% vs 2024</div>
+            </div>
+            <div class="stat-card accent-cyan">
+                <div class="stat-label">Avg. Breach Cost</div>
+                <div class="stat-value neon-cyan">$4.88M</div>
+                <div class="stat-change stat-up">+10% vs 2024</div>
+            </div>
+            <div class="stat-card accent-purple">
+                <div class="stat-label">Avg. Days to Patch</div>
+                <div class="stat-value neon-purple">63</div>
+                <div class="stat-change stat-down">-4 days vs 2024</div>
+            </div>
+            <div class="stat-card accent-green">
+                <div class="stat-label">Critical Severity</div>
+                <div class="stat-value neon-green">8.2%</div>
+                <div class="stat-change stat-up">+1.1% vs 2024</div>
+            </div>
+        </div>
+
+        <!-- Row 1: CVE Trend + Severity -->
+        <div class="section">
+            <div class="section-title">Vulnerability Landscape</div>
+            <div class="grid grid-2">
+                <div class="card accent-cyan">
+                    <div class="card-header">
+                        <span class="card-label">Monthly CVE Disclosures</span>
+                        <span class="card-tag tag-critical">Trend</span>
+                    </div>
+                    <div class="chart-cve-trend"></div>
+                </div>
+                <div class="card accent-amber">
+                    <div class="card-header">
+                        <span class="card-label">Severity Breakdown</span>
+                        <span class="card-tag tag-warning">Distribution</span>
+                    </div>
+                    <div class="chart-severity"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Row 2: Top Vulns by Type + OWASP -->
+        <div class="section">
+            <div class="section-title">Vulnerability Classification</div>
+            <div class="grid grid-2">
+                <div class="card accent-red">
+                    <div class="card-header">
+                        <span class="card-label">Top Vulnerability Types</span>
+                        <span class="card-tag tag-info">By CVE Count</span>
+                    </div>
+                    <div class="chart-vuln-types"></div>
+                </div>
+                <div class="card accent-rose">
+                    <div class="card-header">
+                        <span class="card-label">OWASP Top 10 2025</span>
+                        <span class="card-tag tag-critical">Incident Rate</span>
+                    </div>
+                    <div class="chart-owasp"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Row 3: Breaches + Attack Vectors -->
+        <div class="section">
+            <div class="section-title">Threat Intelligence</div>
+            <div class="grid grid-2">
+                <div class="card accent-red">
+                    <div class="card-header">
+                        <span class="card-label">Costliest Data Breaches</span>
+                        <span class="card-tag tag-critical">2024-2025</span>
+                    </div>
+                    <div class="chart-breaches"></div>
+                </div>
+                <div class="card accent-purple">
+                    <div class="card-header">
+                        <span class="card-label">Attack Vector Distribution</span>
+                        <span class="card-tag tag-warning">2025</span>
+                    </div>
+                    <div class="chart-vectors"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Row 4: Vulnerable Packages + MTTR -->
+        <div class="section">
+            <div class="section-title">Supply Chain &amp; Remediation</div>
+            <div class="grid grid-2">
+                <div class="card accent-cyan">
+                    <div class="card-header">
+                        <span class="card-label">Vulnerable Open Source Packages</span>
+                        <span class="card-tag tag-info">Known CVEs</span>
+                    </div>
+                    <div class="chart-packages"></div>
+                </div>
+                <div class="card accent-green">
+                    <div class="card-header">
+                        <span class="card-label">Mean Time to Patch</span>
+                        <span class="card-tag tag-success">By Industry</span>
+                    </div>
+                    <div class="chart-mttr"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Row 5: Multi-Series Line & Area -->
+        <div class="section">
+            <div class="section-title">Multi-Series Trends</div>
+            <div class="grid grid-2">
+                <div class="card accent-cyan">
+                    <div class="card-header">
+                        <span class="card-label">Incident Response by Category</span>
+                        <span class="card-tag tag-info">Line</span>
+                    </div>
+                    <div class="chart-incidents-line"></div>
+                </div>
+                <div class="card accent-purple">
+                    <div class="card-header">
+                        <span class="card-label">Threat Volume by Source</span>
+                        <span class="card-tag tag-warning">Area</span>
+                    </div>
+                    <div class="chart-threats-area"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Row 6: Multi-Series Column & Bar -->
+        <div class="section">
+            <div class="section-title">Multi-Series Comparisons</div>
+            <div class="grid grid-2">
+                <div class="card accent-red">
+                    <div class="card-header">
+                        <span class="card-label">Vulnerabilities by Severity &amp; Quarter</span>
+                        <span class="card-tag tag-critical">Grouped Column</span>
+                    </div>
+                    <div class="chart-vuln-quarter-col"></div>
+                </div>
+                <div class="card accent-sky">
+                    <div class="card-header">
+                        <span class="card-label">Incidents by Team</span>
+                        <span class="card-tag tag-info">Grouped Bar</span>
+                    </div>
+                    <div class="chart-team-bar"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Row 7: Stacked Column & Bar -->
+        <div class="section">
+            <div class="section-title">Stacked Comparisons</div>
+            <div class="grid grid-2">
+                <div class="card accent-green">
+                    <div class="card-header">
+                        <span class="card-label">Resolved vs Pending by Quarter</span>
+                        <span class="card-tag tag-success">Stacked Column</span>
+                    </div>
+                    <div class="chart-stacked-col"></div>
+                </div>
+                <div class="card accent-rose">
+                    <div class="card-header">
+                        <span class="card-label">Alert Sources by Severity</span>
+                        <span class="card-tag tag-critical">Stacked Bar</span>
+                    </div>
+                    <div class="chart-stacked-bar"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Row 6: LLM Vuln Rates + Zero Days -->
+        <div class="section">
+            <div class="section-title">AI Code Security &amp; Zero-Day Trends</div>
+            <div class="grid grid-2">
+                <div class="card accent-amber">
+                    <div class="card-header">
+                        <span class="card-label">LLM Insecure Code Generation</span>
+                        <span class="card-tag tag-warning">% Vulnerable</span>
+                    </div>
+                    <div class="chart-llm"></div>
+                </div>
+                <div class="card accent-amber">
+                    <div class="card-header">
+                        <span class="card-label">Zero-Day Exploits Discovered</span>
+                        <span class="card-tag tag-critical">Quarterly</span>
+                    </div>
+                    <div class="chart-zeroday"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Row 6: Heatmap (new) -->
+        <div class="section">
+            <div class="section-title">Attack Frequency</div>
+            <div class="grid grid-1">
+                <div class="card accent-cyan">
+                    <div class="card-header">
+                        <span class="card-label">Attack Attempts by Day &amp; Hour</span>
+                        <span class="card-tag tag-info">Weekly Pattern</span>
+                    </div>
+                    <div class="chart-heatmap"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Row 7: Gauges -->
+        <div class="section">
+            <div class="section-title">Security Posture</div>
+            <div class="gauge-row">
+                <div class="card accent-amber"><div class="gauge-patch"></div></div>
+                <div class="card accent-cyan"><div class="gauge-coverage"></div></div>
+                <div class="card accent-green"><div class="gauge-risk"></div></div>
+            </div>
+        </div>
+
+        <footer>
+            <p>Built with <a href="https://github.com/andygongea/neo-charts">Neo Charts</a> &mdash; zero-dependency HTML/CSS charting</p>
+        </footer>
+    </div>
+
+    <script src="../neo-charts.js"></script>
+    <script>
+        // ── Color palettes ──
+        // Dark: bright/vivid (Tailwind ~400) for dark backgrounds
+        // Light: deep/saturated (Tailwind ~600) for white backgrounds
+        var palettes = {
+            dark:  { cyan:'#22d3ee', red:'#f87171', amber:'#fbbf24', purple:'#a78bfa', green:'#34d399', slate:'#94a3b8', rose:'#fb7185', sky:'#38bdf8', indigo:'#818cf8', teal:'#2dd4bf', orange:'#fb923c', yellow:'#facc15', grey:'#9ca3af' },
+            light: { cyan:'#06b6d4', red:'#ef4444', amber:'#f59e0b', purple:'#8b5cf6', green:'#10b981', slate:'#64748b', rose:'#f43f5e', sky:'#0ea5e9', indigo:'#6366f1', teal:'#14b8a6', orange:'#f97316', yellow:'#eab308', grey:'#9ca3af' }
+        };
+
+        var charts = [];
+        var currentTheme = 'dark';
+
+        function toggleTheme() {
+            currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.body.classList.toggle('light', currentTheme === 'light');
+            for (var i = 0; i < charts.length; i++) {
+                charts[i].destroy();
+            }
+            charts = [];
+            createCharts();
+        }
+
+        function createCharts() {
+            var c = palettes[currentTheme];
+            var t = currentTheme;
+
+            // ── 1. CVE Monthly Trend (Area) ──
+            charts.push(neoCharts('.chart-cve-trend', {
+                title: { text: 'CVE Disclosures 2025', align: 'center' },
+                type: 'area', theme: t, highlight: true,
+                layout: { width: '100%', height: '280px' },
+                data: { series: [{ title: 'CVEs', values: [4278,4520,3980,3870,3750,3820,3690,3580,3710,3850,3637,5500], labels: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'], color: [c.cyan], decimals: 0 }] }
+            }));
+
+            // ── 2. Severity Distribution (Progress) ──
+            charts.push(neoCharts('.chart-severity', {
+                title: { text: 'Severity Distribution', align: 'center' },
+                type: 'progress', theme: t, highlight: true, fit: true,
+                layout: { width: '100%', height: '280px' },
+                data: { series: [{ title: 'Severity', values: [8.2,30.3,49.3,12.2], labels: ['Critical (3,950)','High (14,600)','Medium (23,760)','Low (5,875)'], outputValues: ['8.2%','30.3%','49.3%','12.2%'], color: [c.rose,c.orange,c.yellow,c.grey], suffix: '%', decimals: 1 }] }
+            }));
+
+            // ── 3. Top Vulnerability Types (Bar) ──
+            charts.push(neoCharts('.chart-vuln-types', {
+                title: { text: 'Top 10 Vulnerability Types', align: 'center' },
+                type: 'bar', theme: t, highlight: true,
+                layout: { width: '100%' },
+                data: { series: [{ title: 'CVEs', values: [30200,14100,9650,7800,6400,5200,4800,4500,4100,3700], labels: ['XSS','SQL Injection','RCE','Out-of-Bounds Write','OS Cmd Injection','Use After Free','SSRF','Path Traversal','CSRF','Privilege Escalation'], outputValues: ['30.2K','14.1K','9.7K','7.8K','6.4K','5.2K','4.8K','4.5K','4.1K','3.7K'], color: [c.red,c.rose,c.amber,c.amber,c.sky,c.sky,c.teal,c.teal,c.indigo,c.indigo], decimals: 0 }] }
+            }));
+
+            // ── 4. OWASP Top 10 2025 (Waterfall) ──
+            charts.push(neoCharts('.chart-owasp', {
+                title: { text: 'OWASP Top 10 — Incident Rate', align: 'center' },
+                type: 'waterfall', theme: t, highlight: true,
+                layout: { width: '100%' },
+                data: { series: [{ title: 'Incidents', values: [104440,84000,78400,67200,61600,56000,50400,42000,36400,30800], labels: ['Broken Access','Misconfig','Supply Chain','Crypto Fail','Injection','Insecure Design','Auth Failures','Data Integrity','Logging Fails','Exception Handling'], outputValues: ['104K','84K','78K','67K','62K','56K','50K','42K','36K','31K'], color: [c.red,c.rose,c.amber,c.amber,c.purple,c.indigo,c.sky,c.teal,c.green,c.slate], decimals: 0 }] }
+            }));
+
+            // ── 5. Costliest Breaches (Column) ──
+            charts.push(neoCharts('.chart-breaches', {
+                title: { text: 'Costliest Breaches (2024-2025)', align: 'center' },
+                type: 'column', theme: t, highlight: true,
+                layout: { width: '100%', height: '280px' },
+                data: { render: { margin: 0.5 }, series: [{ title: 'Cost', values: [3090,1200,850,750,420], labels: ['UnitedHealth','MOVEit (Clop)','AT&T Wireless','Snowflake','Natl Public Data'], outputValues: ['$3.1B','$1.2B','$850M','$750M','$420M'], color: [c.red,c.rose,c.amber,c.purple,c.slate], prefix: '$', suffix: 'M', decimals: 0 }] }
+            }));
+
+            // ── 6. Attack Vector Distribution (Treemap) ──
+            charts.push(neoCharts('.chart-vectors', {
+                title: { text: 'Attack Vector Distribution', align: 'center' },
+                type: 'treemap', theme: t, highlight: true,
+                layout: { width: '100%', height: '280px' },
+                data: { series: [{ title: 'Vectors', values: [16,15,14,12,11,10,8,6,5,3], labels: ['Phishing','Supply Chain','System Exploit','Web App','Ransomware','Stolen Creds','Cloud Misconfig','Insider','Privilege Misuse','Physical'], outputValues: ['16%','15%','14%','12%','11%','10%','8%','6%','5%','3%'], color: [c.red,c.rose,c.amber,c.purple,c.indigo,c.sky,c.teal,c.green,c.slate,c.slate], suffix: '%', decimals: 0 }] }
+            }));
+
+            // ── 7. Vulnerable Packages (Column) ──
+            charts.push(neoCharts('.chart-packages', {
+                title: { text: 'Top Vulnerable Packages (Known CVEs)', align: 'center' },
+                type: 'column', theme: t, highlight: true,
+                layout: { width: '100%', height: '280px' },
+                data: { render: { margin: 0.3 }, series: [{ title: 'CVEs', values: [44,37,22,18,14,12,8,6,5,4], labels: ['spring-framework','django','pillow','log4j','express','lodash','webpack-dev','requests','cross-spawn','jdom2'], color: [c.cyan,c.sky,c.teal,c.red,c.amber,c.amber,c.purple,c.indigo,c.slate,c.slate], decimals: 0 }] }
+            }));
+
+            // ── 8. Mean Time to Patch (Bar) ──
+            charts.push(neoCharts('.chart-mttr', {
+                title: { text: 'Mean Time to Patch (Days)', align: 'center' },
+                type: 'bar', theme: t, highlight: true,
+                layout: { width: '100%' },
+                data: { series: [{ title: 'Days', values: [104,92,84,75,68,62,55,45,38,36], labels: ['Construction','Manufacturing','Education','Government','Energy','Healthcare','Retail','Telecom','Finance','Technology'], color: [c.red,c.red,c.rose,c.rose,c.amber,c.amber,c.sky,c.teal,c.green,c.green], suffix: ' days', decimals: 0 }] }
+            }));
+
+            // ── 9. LLM Insecure Code Rates (Column) ──
+            charts.push(neoCharts('.chart-llm', {
+                title: { text: 'LLM Insecure Code Generation (%)', align: 'center' },
+                type: 'column', theme: t, highlight: true,
+                layout: { width: '100%', height: '280px' },
+                data: { render: { margin: 0.3 }, series: [{ title: 'Insecure %', values: [90,85,82,80,78,74,70,40], labels: ['GPT-4o','GPT-4.1','DeepSeek V2','CodeLlama','Llama 3.1','Copilot','Gemini 1.5','Claude 3.7'], outputValues: ['90%','85%','82%','80%','78%','74%','70%','40%'], color: [c.red,c.red,c.rose,c.rose,c.amber,c.amber,c.sky,c.green], suffix: '%', decimals: 0 }] }
+            }));
+
+            // ── 10. Multi-Series Line — Incident Response ──
+            charts.push(neoCharts('.chart-incidents-line', {
+                title: { text: 'Incident Response by Category', align: 'center' },
+                type: 'line', theme: t, highlight: true, smooth: false,
+                layout: { width: '100%', height: '280px' },
+                data: { series: [
+                    { title: 'Malware', values: [320,280,310,350,410,390,420,460,430,400,380,450], labels: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'], color: [c.red], decimals: 0 },
+                    { title: 'Phishing', values: [180,210,250,230,270,310,290,340,320,350,380,360], labels: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'], color: [c.amber], decimals: 0 },
+                    { title: 'Ransomware', values: [90,110,95,130,150,140,170,190,160,180,200,220], labels: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'], color: [c.purple], decimals: 0 }
+                ] }
+            }));
+
+            // ── 11. Multi-Series Area — Threat Volume ──
+            charts.push(neoCharts('.chart-threats-area', {
+                title: { text: 'Threat Volume by Source', align: 'center' },
+                type: 'area', theme: t, highlight: true, smooth: false,
+                layout: { width: '100%', height: '280px' },
+                data: { series: [
+                    { title: 'External', values: [1200,1350,1100,1400,1550,1480,1600,1700,1650,1500,1420,1800], labels: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'], color: [c.cyan], decimals: 0 },
+                    { title: 'Internal', values: [400,380,420,450,470,440,490,510,480,460,500,530], labels: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'], color: [c.rose], decimals: 0 },
+                    { title: 'Partner/3rd Party', values: [150,180,160,200,220,210,240,260,230,250,270,290], labels: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'], color: [c.amber], decimals: 0 }
+                ] }
+            }));
+
+            // ── 12. Multi-Series Grouped Column ──
+            charts.push(neoCharts('.chart-vuln-quarter-col', {
+                title: { text: 'Vulnerabilities by Severity & Quarter', align: 'center' },
+                type: 'column', theme: t, highlight: true,
+                layout: { width: '100%', height: '280px' },
+                data: { render: { margin: 0.3 }, series: [
+                    { title: 'Critical', values: [820,950,1100,1080], labels: ['Q1','Q2','Q3','Q4'], color: [c.red], decimals: 0 },
+                    { title: 'High', values: [3200,3500,3800,4100], labels: ['Q1','Q2','Q3','Q4'], color: [c.amber], decimals: 0 },
+                    { title: 'Medium', values: [5400,5800,6100,6460], labels: ['Q1','Q2','Q3','Q4'], color: [c.sky], decimals: 0 }
+                ] }
+            }));
+
+            // ── 13. Multi-Series Grouped Bar ──
+            charts.push(neoCharts('.chart-team-bar', {
+                title: { text: 'Incidents Handled by Team', align: 'center' },
+                type: 'bar', theme: t, highlight: true,
+                layout: { width: '100%' },
+                data: { series: [
+                    { title: 'SOC', values: [245,198,310,175,220], labels: ['Malware','Phishing','DDoS','Insider','Ransomware'], color: [c.cyan], decimals: 0 },
+                    { title: 'IR Team', values: [180,95,120,210,290], labels: ['Malware','Phishing','DDoS','Insider','Ransomware'], color: [c.purple], decimals: 0 },
+                    { title: 'Red Team', values: [60,45,30,85,110], labels: ['Malware','Phishing','DDoS','Insider','Ransomware'], color: [c.rose], decimals: 0 }
+                ] }
+            }));
+
+            // ── 14. Stacked Column ──
+            charts.push(neoCharts('.chart-stacked-col', {
+                title: { text: 'Resolved vs Pending by Quarter', align: 'center' },
+                type: 'column', theme: t, highlight: true,
+                layout: { width: '100%', height: '280px' },
+                data: { render: { stacked: true, margin: 0.3 }, series: [
+                    { title: 'Resolved', values: [3800,4200,4600,5100], labels: ['Q1','Q2','Q3','Q4'], color: [c.green], decimals: 0 },
+                    { title: 'Pending', values: [1200,980,850,620], labels: ['Q1','Q2','Q3','Q4'], color: [c.amber], decimals: 0 },
+                    { title: 'Escalated', values: [400,350,420,380], labels: ['Q1','Q2','Q3','Q4'], color: [c.red], decimals: 0 }
+                ] }
+            }));
+
+            // ── 15. Stacked Bar ──
+            charts.push(neoCharts('.chart-stacked-bar', {
+                title: { text: 'Alert Sources by Severity', align: 'center' },
+                type: 'bar', theme: t, highlight: true,
+                layout: { width: '100%' },
+                data: { render: { stacked: true }, series: [
+                    { title: 'Critical', values: [85,120,65,45,30], labels: ['SIEM','EDR','WAF','IDS','Email Gateway'], color: [c.red], decimals: 0 },
+                    { title: 'High', values: [210,180,150,120,90], labels: ['SIEM','EDR','WAF','IDS','Email Gateway'], color: [c.amber], decimals: 0 },
+                    { title: 'Medium', values: [450,320,280,240,380], labels: ['SIEM','EDR','WAF','IDS','Email Gateway'], color: [c.sky], decimals: 0 }
+                ] }
+            }));
+
+            // ── 16. Zero-Day Exploits (Line) ──
+            charts.push(neoCharts('.chart-zeroday', {
+                title: { text: 'Zero-Day Exploits (Quarterly)', align: 'center' },
+                type: 'line', theme: t, highlight: true,
+                layout: { width: '100%', height: '280px' },
+                data: { series: [{ title: 'Zero-Days', values: [22,20,18,15,25,24,22,19], labels: ['Q1 24','Q2 24','Q3 24','Q4 24','Q1 25','Q2 25','Q3 25','Q4 25'], color: [c.amber], decimals: 0 }] }
+            }));
+
+            // ── 17. Attack Frequency Heatmap ──
+            charts.push(neoCharts('.chart-heatmap', {
+                title: { text: 'Attack Attempts — Weekly Pattern (thousands)', align: 'center' },
+                type: 'heatmap', theme: t, highlight: true,
+                layout: { width: '100%', height: '320px' },
+                data: { series: [
+                    { title: 'Mon', values: [8,12,18,42,65,78,82,71,58,43,35,22], labels: ['00','02','04','06','08','10','12','14','16','18','20','22'], color: [c.cyan] },
+                    { title: 'Tue', values: [6,10,15,38,62,75,88,80,64,48,32,18], labels: ['00','02','04','06','08','10','12','14','16','18','20','22'], color: [c.cyan] },
+                    { title: 'Wed', values: [7,11,20,45,70,84,91,85,68,52,38,24], labels: ['00','02','04','06','08','10','12','14','16','18','20','22'], color: [c.cyan] },
+                    { title: 'Thu', values: [9,14,22,48,68,80,86,78,62,46,34,20], labels: ['00','02','04','06','08','10','12','14','16','18','20','22'], color: [c.cyan] },
+                    { title: 'Fri', values: [10,16,25,52,72,85,90,82,70,55,40,28], labels: ['00','02','04','06','08','10','12','14','16','18','20','22'], color: [c.cyan] },
+                    { title: 'Sat', values: [15,20,28,35,40,42,45,44,38,32,26,18], labels: ['00','02','04','06','08','10','12','14','16','18','20','22'], color: [c.cyan] },
+                    { title: 'Sun', values: [18,22,30,32,36,38,40,38,34,28,24,16], labels: ['00','02','04','06','08','10','12','14','16','18','20','22'], color: [c.cyan] }
+                ] }
+            }));
+
+            // ── 18-20. Gauges ──
+            charts.push(neoCharts('.gauge-patch', {
+                title: { text: '' }, type: 'gauge', theme: t,
+                gauge: { thickness: 10, valueFontSize: 40 },
+                layout: { width: '220px', height: '220px' },
+                data: { series: [{ title: 'Patch Rate', values: [72,0,100], labels: ['Current','Min','Max'], outputValues: ['72%'], color: [c.amber], suffix: '%', decimals: 0 }] }
+            }));
+
+            charts.push(neoCharts('.gauge-coverage', {
+                title: { text: '' }, type: 'gauge', theme: t,
+                gauge: { thickness: 10, valueFontSize: 40 },
+                layout: { width: '220px', height: '220px' },
+                data: { series: [{ title: 'SAST Coverage', values: [89,0,100], labels: ['Current','Min','Max'], outputValues: ['89%'], color: [c.cyan], suffix: '%', decimals: 0 }] }
+            }));
+
+            charts.push(neoCharts('.gauge-risk', {
+                title: { text: '' }, type: 'gauge', theme: t,
+                gauge: { thickness: 10, valueFontSize: 40 },
+                layout: { width: '220px', height: '220px' },
+                data: { series: [{ title: 'Risk Score', values: [34,0,100], labels: ['Current','Min','Max'], outputValues: ['34'], color: [c.green], suffix: '/100', decimals: 0 }] }
+            }));
+        }
+
+        createCharts();
+    </script>
+</body>
+</html>

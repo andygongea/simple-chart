@@ -1,6 +1,6 @@
 {
   "name": "neo-charts",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Lightweight HTML/CSS chart library. No dependencies. No SVG or Canvas.",
   "main": "neo-charts.js",
   "style": "neo-charts.css",
@@ -20,5 +20,5 @@
     "no-dependencies"
   ],
   "license": "MIT",
-  "homepage": "https://github.com/andygongea/neo-charts/demo/index.html"
+  "homepage": "https://github.com/andygongea/neo-charts"
 }

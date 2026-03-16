@@ -551,11 +551,8 @@
             };
         }
 
-        function interpolateColor(lowRgb, highRgb, t) {
-            var r = Math.round(lowRgb.r + (highRgb.r - lowRgb.r) * t);
-            var g = Math.round(lowRgb.g + (highRgb.g - lowRgb.g) * t);
-            var b = Math.round(lowRgb.b + (highRgb.b - lowRgb.b) * t);
-            return 'rgb(' + r + ',' + g + ',' + b + ')';
+        function interpolateColor(rgb, t) {
+            return 'rgba(' + rgb.r + ',' + rgb.g + ',' + rgb.b + ',' + (0.08 + t * 0.82).toFixed(2) + ')';
         }
 
         function renderHeatmap() {
@@ -573,8 +570,6 @@
             var heatMax = Math.max.apply(null, allValues);
             var heatRange = heatMax - heatMin;
 
-            // Low color: dark muted version of the background
-            var lowRgb = { r: 26, g: 26, b: 46 };
 
             var cols = series[0].labels.length;
             var rows = series.length;
@@ -593,7 +588,7 @@
                 var highRgb = parseHexColor(getColorValue(serie.color, 0));
                 for (var i = 0; i < serie.values.length; i++) {
                     var intensity = heatRange > 0 ? (serie.values[i] - heatMin) / heatRange : 0.5;
-                    var cellColor = interpolateColor(lowRgb, highRgb, intensity);
+                    var cellColor = interpolateColor(highRgb, intensity);
                     var hasOutput = serie.outputValues.length > 0;
                     var val = hasOutput ? escapeHtml(String(serie.outputValues[i])) : (escapeHtml(serie.prefix || '') + serie.values[i] + escapeHtml(serie.suffix || ''));
                     var titleVal = hasOutput ? serie.outputValues[i] : ((serie.prefix || '') + serie.values[i] + (serie.suffix || ''));
@@ -741,7 +736,7 @@
             var range = max - min;
             var pct = range > 0 ? ((current - min) / range) : 0;
             var color = serie.color.length > 0 ? serie.color[0] : '#00aeef';
-            var trackColor = 'rgba(128,128,128,.15)';
+            var trackColor = 'var(--nc-border)';
             var gapDeg = 30;
             var startDeg = 180 + gapDeg;
             var arcDeg = 360 - gapDeg * 2;
@@ -764,7 +759,7 @@
         }
 
         function renderLegend() {
-            if (!config.legend || type === 'gauge' || type === 'treemap') return '';
+            if (!config.legend || type === 'gauge' || type === 'treemap' || type === 'heatmap') return '';
 
             // Single series with multiple colors: item-level legend
             // Skip for chart types that already show labels on each item

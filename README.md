@@ -333,11 +333,9 @@ When no `color` array is provided, items cycle through this 10-color palette:
 - **9 chart types** — column, bar, line, area, progress, waterfall, heatmap, treemap, gauge
 - **Multi-series** — grouped and stacked modes for column and bar charts
 
-## Demos
+## Demo
 
-- [demo/index.html](demo/index.html) — all chart types
-- [demo/security-analytics.html](demo/security-analytics.html) — full security dashboard (18 charts)
-- [demo/security-analytics-glass.html](demo/security-analytics-glass.html) — glass/frosted theme variant
+- [demo/demo1.html](demo/demo1.html) — full security dashboard (18 charts)
 
 ## License
 

@@ -4,7 +4,7 @@
 
 .p-neo-charts.is-transparent { box-shadow:none; }
 .is-transparent > .nc-chart { background-color:transparent; }
-.nc-chart { --nc-bg:#1a1a2e; --nc-text:rgba(255,255,255,.85); --nc-text-muted:rgba(255,255,255,.7); --nc-text-dim:rgba(255,255,255,.6); --nc-text-faint:rgba(255,255,255,.5); --nc-border:rgba(255,255,255,.08); --nc-border-strong:rgba(255,255,255,.15); --nc-tooltip-bg:rgba(15,15,30,.95); --nc-tooltip-text:rgba(255,255,255,.9); background-color:transparent; overflow:visible; font-family: 'Merriweather', 'Lato', Arial, sans-serif; padding:20px 24px; display:flex; flex-direction:column; gap:16px; }
+.nc-chart { --nc-bg:#1a1a2e; --nc-text:rgba(255,255,255,.85); --nc-text-muted:rgba(255,255,255,.7); --nc-text-dim:rgba(255,255,255,.6); --nc-text-faint:rgba(255,255,255,.5); --nc-border:rgba(255,255,255,.08); --nc-border-strong:rgba(255,255,255,.15); --nc-tooltip-bg:rgba(15,15,30,.95); --nc-tooltip-text:rgba(255,255,255,.9); background-color:transparent; overflow:visible; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; padding:20px 24px; display:flex; flex-direction:column; gap:16px; }
 .nc-chart, .nc-chart * { box-sizing:border-box }
 .nc-chart .nc-title { width:100%; padding:0; flex-shrink:0; text-align:right; font-weight:600; font-size:16px; color:var(--nc-text) }
 .nc-chart .nc-subtitle { font-size:12px; font-weight:400; color:var(--nc-text-muted); margin-top:2px; }
@@ -125,19 +125,20 @@
 .nc-axis-label { font-size:11px; color:var(--nc-text-dim); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 
 /* Heatmap */
-.nc-heatmap .nc-plot { position:relative; width:100%; flex:1; min-height:0; padding:0 0 0 80px; display:grid; grid-template-rows:auto 1fr; gap:0; overflow:hidden; }
+.nc-heatmap .nc-plot { position:relative; width:100%; flex:1; min-height:0; padding:0 0 0 80px; display:grid; grid-template-rows:auto 1fr; gap:0; }
 .nc-heatmap-col-labels { display:grid; gap:2px; padding-bottom:8px; min-width:0; }
 .nc-heatmap-col-label { font-size:11px; font-weight:600; color:var(--nc-text-muted); text-align:center; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0; }
 .nc-heatmap-grid { display:grid; gap:2px; position:relative; min-width:0; min-height:0; }
-.nc-heatmap-cell { position:relative; display:flex; align-items:center; justify-content:center; border-radius:3px; cursor:pointer; transition:opacity .2s, transform .15s; min-height:0; min-width:0; overflow:hidden; }
+.nc-heatmap-cell { position:relative; display:flex; align-items:center; justify-content:center; border-radius:3px; cursor:pointer; transition:filter .2s, transform .15s; min-height:0; min-width:0; overflow:hidden; }
 .nc-heatmap-cell:hover { transform:scale(1.05); z-index:10; }
 .nc-heatmap-cell:hover .nc-tooltip { display:block; margin-top:-6px; }
 .nc-heatmap-cell .nc-tooltip { left:50%; bottom:100%; top:auto; transform:translateX(-50%); margin-bottom:8px; }
 .nc-heatmap-value { font-size:11px; font-weight:600; color:#fff; text-shadow:0 1px 3px rgba(0,0,0,.5); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.nc-light .nc-heatmap-value { color:#1c1c1e; text-shadow:none; }
 .nc-heatmap-row-labels { position:absolute; left:0; top:0; bottom:0; width:70px; display:grid; padding-top:28px; gap:2px; }
 .nc-heatmap-row-label { font-size:11px; font-weight:600; color:var(--nc-text-muted); display:flex; align-items:center; justify-content:flex-end; padding-right:10px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.has-highlight .nc-heatmap-grid:hover .nc-heatmap-cell { opacity:.3; transition:opacity .25s, transform .15s; }
-.has-highlight .nc-heatmap-grid:hover .nc-heatmap-cell:hover { opacity:1; }
+.has-highlight .nc-heatmap-grid:hover .nc-heatmap-cell { filter:brightness(.5) saturate(.3); transition:filter .25s, transform .15s; }
+.has-highlight .nc-heatmap-grid:hover .nc-heatmap-cell:hover { filter:brightness(1.1) saturate(1.2); outline:2px solid var(--nc-text); outline-offset:-1px; }
 
 /* Treemap */
 .nc-treemap .nc-plot { position:relative; width:100%; flex:1; min-height:0; }
@@ -146,7 +147,9 @@
 .nc-treemap-cell:hover .nc-tooltip { display:block; margin-top:-6px; }
 .nc-treemap-cell .nc-tooltip { left:50%; bottom:100%; top:auto; transform:translateX(-50%); margin-bottom:8px; }
 .nc-treemap-label { font-size:12px; font-weight:600; color:#fff; text-shadow:0 1px 3px rgba(0,0,0,.5); text-align:center; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:90%; }
+.nc-light .nc-treemap-label { color:#1c1c1e; text-shadow:none; }
 .nc-treemap-value { font-size:11px; color:rgba(255,255,255,.85); text-shadow:0 1px 3px rgba(0,0,0,.5); }
+.nc-light .nc-treemap-value { color:rgba(0,0,0,.7); text-shadow:none; }
 .has-highlight .nc-canvas:hover .nc-treemap-cell { opacity:.3; transition:opacity .25s, filter .2s; }
 .has-highlight .nc-canvas:hover .nc-treemap-cell:hover { opacity:1; }
 
