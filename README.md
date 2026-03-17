@@ -2,6 +2,18 @@
 
 Lightweight HTML/CSS chart library with zero dependencies. No SVG, no Canvas — pure DOM elements styled with CSS.
 
+## Features
+
+- **Zero dependencies** — no jQuery, no D3, no build step required
+- **Pure CSS rendering** — all chart elements are styled DOM nodes, no SVG or Canvas
+- **Responsive** — charts resize with their container via ResizeObserver
+- **Pixel-perfect** — integer pixel sizing with remainder distribution for crisp rendering
+- **Animated** — entry animations and smooth hover transitions
+- **Interactive** — tooltips on hover, highlight mode with bidirectional label sync (bar/waterfall)
+- **Configurable** — gap between items, gauge thickness, default color palette, light/dark themes
+- **9 chart types** — column, bar, line, area, progress, waterfall, heatmap, treemap, gauge
+- **Multi-series** — grouped and stacked modes for column and bar charts
+
 ## Installation
 
 Download `neo-charts.js` and `neo-charts.css`, then include them in your HTML:
@@ -320,18 +332,6 @@ When no `color` array is provided, items cycle through this 10-color palette:
 | `chart.update(newOptions)` | Merge new options and re-render the chart. Returns a new API object. |
 | `chart.destroy()` | Remove the chart and clean up event listeners. |
 | `chart.element` | The DOM element containing the chart. |
-
-## Features
-
-- **Zero dependencies** — no jQuery, no D3, no build step required
-- **Pure CSS rendering** — all chart elements are styled DOM nodes, no SVG or Canvas
-- **Responsive** — charts resize with their container via ResizeObserver
-- **Pixel-perfect** — integer pixel sizing with remainder distribution for crisp rendering
-- **Animated** — entry animations and smooth hover transitions
-- **Interactive** — tooltips on hover, highlight mode with bidirectional label sync (bar/waterfall)
-- **Configurable** — gap between items, gauge thickness, default color palette, light/dark themes
-- **9 chart types** — column, bar, line, area, progress, waterfall, heatmap, treemap, gauge
-- **Multi-series** — grouped and stacked modes for column and bar charts
 
 ## Demo
 
