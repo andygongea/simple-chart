@@ -30,7 +30,7 @@
     };
 
     var defaults = {
-        type: 'column', /* progress, bar, waterfall, column, gauge, line, area, heatmap, treemap */
+        type: 'column',
         cssClass: '',
         title: {
             text: 'Neo Charts',

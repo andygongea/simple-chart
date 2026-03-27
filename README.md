@@ -11,7 +11,7 @@ Lightweight HTML/CSS chart library with zero dependencies. No SVG, no Canvas —
 - **Animated** — entry animations and smooth hover transitions
 - **Interactive** — tooltips on hover, highlight mode with bidirectional label sync (bar/waterfall)
 - **Configurable** — gap between items, gauge thickness, default color palette, light/dark themes
-- **9 chart types** — column, bar, line, area, progress, waterfall, heatmap, treemap, gauge
+- **13 chart types** — column, bar, line, area, progress, waterfall, heatmap, treemap, gauge, pie, donut, bullet, funnel
 - **Multi-series** — grouped and stacked modes for column and bar charts
 
 ## Installation
@@ -84,7 +84,6 @@ neoCharts('.chart', {
     type: 'column',
     layout: { width: '100%', height: '250px' },
     data: {
-        render: { margin: 0.2 },
         series: [{
             title: 'Sales',
             values: [120, 450, 320, 780, 560],
@@ -384,7 +383,7 @@ neoCharts('.chart', {
 | `layout.height` | string | `'300px'` | Chart height (CSS value or `'auto'`) |
 | `layout.lines.number` | number | `4` | Number of guideline lines |
 | `layout.lines.align` | string | `'right'` | Guideline label position: `left`, `right` |
-| `data.render.margin` | number | `0` | Spacing between items (percentage) |
+| `data.render.empty` | string | `'No data available.'` | Message shown when series has no data |
 | `data.render.stacked` | boolean | `false` | Stack multiple series (column/bar) |
 | `data.render.threshold` | array | `[]` | Threshold lines |
 | `data.series` | array | `[]` | Array of series objects |
@@ -422,7 +421,7 @@ When no `color` array is provided, items cycle through this 10-color palette:
 
 ## Demo
 
-- [demo/demo1.html](demo/demo1.html) — full security dashboard (18 charts)
+- [demo/demo1.html](demo/demo1.html) — full security dashboard (23 charts)
 
 ## License
 
