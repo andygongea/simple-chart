@@ -51,6 +51,13 @@
             thickness: 14,
             valueFontSize: 48
         },
+        pie: {
+            innerRadius: 0
+        },
+        bullet: {
+            targets: [],
+            ranges: []
+        },
         highlight: false,
         animate: true,
         legend: true,
@@ -156,7 +163,7 @@
         var series = config.data.series;
         var render = config.data.render;
         var type = config.type;
-        var validTypes = ['column', 'bar', 'line', 'area', 'progress', 'waterfall', 'gauge', 'heatmap', 'treemap'];
+        var validTypes = ['column', 'bar', 'line', 'area', 'progress', 'waterfall', 'gauge', 'heatmap', 'treemap', 'pie', 'donut', 'bullet', 'funnel'];
 
         // Warn on common misconfigurations
         if (validTypes.indexOf(type) === -1) {
@@ -196,6 +203,23 @@
             valueRange = maxValue - minValue;
         }
 
+        // Bullet: extend max to include targets and ranges
+        if (type === 'bullet') {
+            var bTargets = config.bullet.targets || [];
+            var bRanges = config.bullet.ranges || [];
+            var bulletMax = maxValue;
+            for (var bt = 0; bt < bTargets.length; bt++) {
+                if (bTargets[bt] > bulletMax) bulletMax = bTargets[bt];
+            }
+            for (var br = 0; br < bRanges.length; br++) {
+                if (bRanges[br] > bulletMax) bulletMax = bRanges[br];
+            }
+            if (bulletMax > maxValue) {
+                maxValue = niceMax(bulletMax);
+                valueRange = maxValue - minValue;
+            }
+        }
+
         function getMaxSum() {
             var sums = [];
             var result = 0;
@@ -223,6 +247,10 @@
             var sum = 0;
             for (var i = 0; i < arr.length; i++) sum += arr[i];
             return sum;
+        }
+
+        function effectiveRange() {
+            return minValue < 0 ? valueRange : maxValue;
         }
 
         function delay(i) {
@@ -313,21 +341,26 @@
             return html;
         }
 
-        function renderTooltip(serieIdx, i) {
-            var serie = series[serieIdx];
+        function formatValue(serie, i) {
             var hasOutput = serie.outputValues.length > 0;
-            var val = hasOutput
+            return hasOutput
                 ? escapeHtml(String(serie.outputValues[i]))
                 : (escapeHtml(serie.prefix || '') + serie.values[i].toFixed(serie.decimals) + escapeHtml(serie.suffix || ''));
-            var color = getColorValue(serie.color, i);
+        }
 
+        function tooltipRow(color, label, val) {
+            return '<div class="nc-tooltip-row">'
+                + '<span class="nc-tooltip-dot" style="background-color:' + color + '"></span>'
+                + '<span class="nc-tooltip-series">' + label + '</span>'
+                + '<span class="nc-tooltip-value">' + val + '</span>'
+                + '</div>';
+        }
+
+        function renderTooltip(serieIdx, i) {
+            var serie = series[serieIdx];
             return '<div class="nc-tooltip">'
                 + '<div class="nc-tooltip-header">' + escapeHtml(serie.labels[i]) + '</div>'
-                + '<div class="nc-tooltip-row">'
-                + '<span class="nc-tooltip-dot" style="background-color:' + color + '"></span>'
-                + '<span class="nc-tooltip-series">' + escapeHtml(serie.title) + '</span>'
-                + '<span class="nc-tooltip-value">' + val + '</span>'
-                + '</div>'
+                + tooltipRow(getColorValue(serie.color, i), escapeHtml(serie.title), formatValue(serie, i))
                 + '<div class="nc-tooltip-arrow"></div>'
                 + '</div>';
         }
@@ -368,7 +401,7 @@
             if (!count) return html;
 
             var hasNeg = minValue < 0;
-            var range = hasNeg ? valueRange : maxValue;
+            var range = effectiveRange();
 
             if (hasNeg) {
                 html += '<div class="nc-baseline" style="bottom:' + toFixed3((-minValue) / range * 100) + '%"></div>';
@@ -414,16 +447,8 @@
                 for (var s = 0; s < series.length; s++) {
                     var serie = series[s];
                     var h = serie.values[i] * 100 / maxStacked;
-                    var color = getColorValue(serie.color, i);
-                    var val = serie.outputValues && serie.outputValues.length > 0
-                        ? escapeHtml(String(serie.outputValues[i]))
-                        : (escapeHtml(serie.prefix) + serie.values[i].toFixed(serie.decimals) + escapeHtml(serie.suffix));
 
-                    tooltip += '<div class="nc-tooltip-row">'
-                        + '<span class="nc-tooltip-dot" style="background-color:' + color + '"></span>'
-                        + '<span class="nc-tooltip-series">' + escapeHtml(serie.title) + '</span>'
-                        + '<span class="nc-tooltip-value">' + val + '</span>'
-                        + '</div>';
+                    tooltip += tooltipRow(getColorValue(serie.color, i), escapeHtml(serie.title), formatValue(serie, i));
 
                     items += '<div class="nc-item"' + dataAttr(s, i) + ' style="height:' + toFixed3(h) + '%;' + getColor(serie.color, i) + '">';
                     items += renderItemContent(s, i, { hideLabel: true, hideValue: true });
@@ -443,7 +468,7 @@
 
             var isGrouped = count > 1;
             var hasNeg = minValue < 0;
-            var range = hasNeg ? valueRange : maxValue;
+            var range = effectiveRange();
 
             var len = series[0].values.length;
             for (var i = 0; i < len; i++) {
@@ -624,9 +649,8 @@
                 for (var i = 0; i < serie.values.length; i++) {
                     var intensity = heatRange > 0 ? (serie.values[i] - heatMin) / heatRange : 0.5;
                     var cellColor = interpolateColor(highRgb, intensity);
-                    var hasOutput = serie.outputValues.length > 0;
-                    var val = hasOutput ? escapeHtml(String(serie.outputValues[i])) : (escapeHtml(serie.prefix || '') + serie.values[i] + escapeHtml(serie.suffix || ''));
-                    var titleVal = hasOutput ? serie.outputValues[i] : ((serie.prefix || '') + serie.values[i] + (serie.suffix || ''));
+                    var val = formatValue(serie, i);
+                    var titleVal = serie.outputValues.length > 0 ? serie.outputValues[i] : ((serie.prefix || '') + serie.values[i] + (serie.suffix || ''));
 
                     html += '<div class="nc-heatmap-cell"' + dataAttr(s, i) + ' style="background-color:' + cellColor + '" title="' + escapeHtml(serie.title + ': ' + titleVal) + '">';
                     html += '<span class="nc-heatmap-value">' + val + '</span>';
@@ -745,8 +769,7 @@
                 var r = rects[i];
                 var item = r.item;
                 var serie = series[item.serieIdx];
-                var hasOutput = serie.outputValues.length > 0;
-                var val = hasOutput ? escapeHtml(String(serie.outputValues[item.itemIdx])) : (escapeHtml(serie.prefix || '') + item.value + escapeHtml(serie.suffix || ''));
+                var val = formatValue(serie, item.itemIdx);
 
                 html += '<div class="nc-treemap-cell"' + dataAttr(item.serieIdx, item.itemIdx) + ' style="'
                     + 'left:' + toFixed3(r.x) + '%;top:' + toFixed3(r.y) + '%;'
@@ -792,8 +815,197 @@
                 + '</div>';
         }
 
+        function renderPie() {
+            var html = '';
+            if (!series.length) return html;
+
+            var serie = series[0];
+            var total = 0;
+            for (var i = 0; i < serie.values.length; i++) {
+                total += Math.abs(serie.values[i]);
+            }
+            if (!total) return renderEmpty();
+
+            var isDonut = type === 'donut';
+            var innerR = isDonut ? (config.pie.innerRadius || 60) : config.pie.innerRadius;
+
+            // Build conic-gradient stops
+            var stops = [];
+            var angle = 0;
+            for (var i = 0; i < serie.values.length; i++) {
+                var val = Math.abs(serie.values[i]);
+                var sliceAngle = (val / total) * 360;
+                var endAngle = angle + sliceAngle;
+                var color = getColorValue(serie.color, i);
+                stops.push(color + ' ' + toFixed3(angle) + 'deg ' + toFixed3(endAngle) + 'deg');
+                angle = endAngle;
+            }
+
+            var ringStyle = 'background:conic-gradient(from 0deg,' + stops.join(',') + ')';
+            if (innerR > 0) {
+                ringStyle += ';' + donutMask(innerR);
+            }
+
+            html += '<div class="nc-pie-ring" style="' + ringStyle + '"'
+                + ' data-nc-pie-total="' + total + '"'
+                + '></div>';
+
+            // Highlight overlay (shown on hover via JS)
+            var hlStyle = '';
+            if (innerR > 0) {
+                hlStyle = ' style="' + donutMask(innerR) + '"';
+            }
+            html += '<div class="nc-pie-highlight"' + hlStyle + '></div>';
+
+            // Tooltips positioned at each slice's mid-angle (outside the ring)
+            var tipAngle = 0;
+            for (var i = 0; i < serie.values.length; i++) {
+                var pct = toFixed3(Math.abs(serie.values[i]) / total * 100);
+                var sliceDeg = (Math.abs(serie.values[i]) / total) * 360;
+                var midDeg = tipAngle + sliceDeg / 2;
+                tipAngle += sliceDeg;
+
+                // Position at ~70% radius so tooltip overlaps the slice ~30%
+                var midRad = (midDeg - 90) * Math.PI / 180;
+                var tipX = toFixed3(50 + 35 * Math.cos(midRad));
+                var tipY = toFixed3(50 + 35 * Math.sin(midRad));
+
+                // Arrow points toward pie center — pick the cardinal closest to center
+                var tipDir;
+                if (midDeg <= 45 || midDeg > 315) tipDir = 'top';
+                else if (midDeg > 45 && midDeg <= 135) tipDir = 'right';
+                else if (midDeg > 135 && midDeg <= 225) tipDir = 'bottom';
+                else tipDir = 'left';
+
+                html += '<div class="nc-pie-tip-item nc-tip-' + tipDir + '" data-pie-tip="' + i + '" style="display:none;left:' + tipX + '%;top:' + tipY + '%">';
+                html += '<div class="nc-tooltip">';
+                html += '<div class="nc-tooltip-header">' + escapeHtml(serie.labels[i]) + '</div>';
+                html += tooltipRow(getColorValue(serie.color, i), formatValue(serie, i), pct + '%');
+                html += '<div class="nc-tooltip-arrow"></div>';
+                html += '</div>';
+                html += '</div>';
+            }
+
+            return html;
+        }
+
+        function renderBullet() {
+            var html = '';
+            if (!series.length) return html;
+
+            var serie = series[0];
+            var targets = config.bullet.targets || [];
+            var ranges = config.bullet.ranges || [];
+
+            // Auto-generate ranges if empty
+            if (!ranges.length) {
+                ranges = [maxValue * 0.6, maxValue * 0.8, maxValue];
+            }
+
+            for (var i = 0; i < serie.values.length; i++) {
+                var val = serie.values[i];
+                var w = maxValue > 0 ? toFixed3(Math.abs(val) / maxValue * 100) : 0;
+                var color = getColorValue(serie.color, i);
+
+                html += '<div class="nc-bullet-row"' + dataAttr(0, i) + '>';
+
+                // Qualitative ranges (largest to smallest for correct z-stacking)
+                for (var r = ranges.length - 1; r >= 0; r--) {
+                    var rangeW = maxValue > 0 ? toFixed3(ranges[r] / maxValue * 100) : 0;
+                    var bandOpacity = toFixed3(0.06 + (r / Math.max(1, ranges.length - 1)) * 0.14);
+                    html += '<div class="nc-bullet-range" style="width:' + rangeW + '%;opacity:' + bandOpacity + '"></div>';
+                }
+
+                // Actual value bar
+                html += '<div class="nc-bullet-bar" style="width:' + w + '%;background-color:' + color + ';' + delay(i) + '"></div>';
+
+                // Target marker
+                if (targets[i] !== undefined && targets[i] !== null) {
+                    var tPos = maxValue > 0 ? toFixed3(targets[i] / maxValue * 100) : 0;
+                    html += '<div class="nc-bullet-target" style="left:' + tPos + '%"></div>';
+                }
+
+                html += renderTooltip(0, i);
+                html += '</div>';
+            }
+
+            return html;
+        }
+
+        function renderFunnel() {
+            var html = '';
+            if (!series.length) return html;
+
+            var serie = series[0];
+            var funnelMax = 0;
+            for (var i = 0; i < serie.values.length; i++) {
+                if (serie.values[i] > funnelMax) funnelMax = serie.values[i];
+            }
+            if (!funnelMax) return renderEmpty();
+
+            for (var i = 0; i < serie.values.length; i++) {
+                var val = serie.values[i];
+                var w = toFixed3(val / funnelMax * 100);
+                var nextVal = i < serie.values.length - 1 ? serie.values[i + 1] : val;
+                var nextW = toFixed3(nextVal / funnelMax * 100);
+
+                var offset = toFixed3((100 - parseFloat(w)) / 2);
+                var nextOffset = toFixed3((100 - parseFloat(nextW)) / 2);
+
+                var clipPath = 'polygon(' + offset + '% 0%,' + (100 - parseFloat(offset)) + '% 0%,'
+                    + (100 - parseFloat(nextOffset)) + '% 100%,' + nextOffset + '% 100%)';
+
+                var color = getColorValue(serie.color, i);
+                var displayVal = formatValue(serie, i);
+
+                html += '<div class="nc-funnel-wrap"' + dataAttr(0, i) + '>';
+                html += '<div class="nc-funnel-item"'
+                    + ' style="background-color:' + color + ';clip-path:' + clipPath + ';' + delay(i) + '">';
+                html += '<span class="nc-funnel-label">' + escapeHtml(serie.labels[i]) + '</span>';
+                html += '<span class="nc-funnel-value">' + displayVal + '</span>';
+                html += '</div>';
+                html += renderTooltip(0, i);
+                html += '</div>';
+            }
+
+            return html;
+        }
+
+        function legendItem(color, label) {
+            return '<div class="nc-legend-item">'
+                + '<span class="nc-legend-dot" style="background-color:' + color + '"></span>'
+                + '<span class="nc-legend-label">' + escapeHtml(label) + '</span>'
+                + '</div>';
+        }
+
+        function donutMask(innerR) {
+            var mask = 'radial-gradient(circle closest-side,transparent ' + innerR + '%,#000 calc(' + innerR + '% + 1px))';
+            return '-webkit-mask:' + mask + ';mask:' + mask;
+        }
+
+        function getCanvasChildren(canvas) {
+            var children = [];
+            for (var c = 0; c < canvas.children.length; c++) {
+                var ch = canvas.children[c];
+                if (ch.classList.contains('nc-guidelines') || ch.classList.contains('nc-threshold') || ch.classList.contains('nc-baseline')) continue;
+                children.push(ch);
+            }
+            return children;
+        }
+
         function renderLegend() {
-            if (!config.legend || type === 'gauge' || type === 'treemap' || type === 'heatmap') return '';
+            if (!config.legend || type === 'gauge' || type === 'treemap' || type === 'heatmap' || type === 'funnel' || type === 'bullet') return '';
+
+            // Pie/donut: always show item-level legend
+            if (type === 'pie' || type === 'donut') {
+                if (!series.length) return '';
+                var pieSerie = series[0];
+                var pieHtml = '<div class="nc-legend">';
+                for (var pi = 0; pi < pieSerie.labels.length; pi++) {
+                    pieHtml += legendItem(getColorValue(pieSerie.color, pi), pieSerie.labels[pi]);
+                }
+                return pieHtml + '</div>';
+            }
 
             // Single series with multiple colors: item-level legend
             // Skip for chart types that already show labels on each item
@@ -803,11 +1015,7 @@
                 if (type === 'bar' || type === 'column' || type === 'waterfall' || type === 'progress') return '';
                 var html = '<div class="nc-legend">';
                 for (var i = 0; i < serie.labels.length; i++) {
-                    var color = getColorValue(serie.color, i);
-                    html += '<div class="nc-legend-item">'
-                        + '<span class="nc-legend-dot" style="background-color:' + color + '"></span>'
-                        + '<span class="nc-legend-label">' + escapeHtml(serie.labels[i]) + '</span>'
-                        + '</div>';
+                    html += legendItem(getColorValue(serie.color, i), serie.labels[i]);
                 }
                 return html + '</div>';
             }
@@ -817,11 +1025,7 @@
 
             var html = '<div class="nc-legend">';
             series.forEach(function (serie) {
-                var color = serie.color.length > 0 ? serie.color[0] : '#00aeef';
-                html += '<div class="nc-legend-item">'
-                    + '<span class="nc-legend-dot" style="background-color:' + color + '"></span>'
-                    + '<span class="nc-legend-label">' + escapeHtml(serie.title) + '</span>'
-                    + '</div>';
+                html += legendItem(serie.color.length > 0 ? serie.color[0] : '#00aeef', serie.title);
             });
             return html + '</div>';
         }
@@ -848,9 +1052,9 @@
         }
         chartTemplate += '<div class="nc-chart-body">';
 
-        var useGrid = (type === 'line' || type === 'area' || type === 'column' || type === 'bar' || type === 'waterfall');
-        var isHorizontalBar = type === 'bar' || type === 'waterfall';
-        var skipGuidelines = type === 'gauge' || type === 'heatmap' || type === 'treemap' || type === 'progress' || (type === 'bar' && render.stacked);
+        var useGrid = (type === 'line' || type === 'area' || type === 'column' || type === 'bar' || type === 'waterfall' || type === 'bullet');
+        var isHorizontalBar = type === 'bar' || type === 'waterfall' || type === 'bullet';
+        var skipGuidelines = type === 'gauge' || type === 'heatmap' || type === 'treemap' || type === 'progress' || type === 'pie' || type === 'donut' || type === 'funnel' || (type === 'bar' && render.stacked);
 
         // Bar/waterfall: render y-axis labels (category names) before the plot
         if (isHorizontalBar && series.length > 0 && series[0].labels.length > 0) {
@@ -875,6 +1079,8 @@
         var plotStyle = '';
         if (type === 'gauge') {
             plotStyle = ' style="--gauge-thickness:' + config.gauge.thickness + 'px;--gauge-value-size:' + config.gauge.valueFontSize + 'px"';
+        } else if (type === 'funnel') {
+            plotStyle = ' style="gap:' + gap + 'px"';
         }
         chartTemplate += '<div class="nc-canvas nc-plot"' + plotStyle + '>';
         if (!skipGuidelines) {
@@ -914,6 +1120,16 @@
                     break;
                 case 'gauge':
                     chartTemplate += renderGauge();
+                    break;
+                case 'pie':
+                case 'donut':
+                    chartTemplate += renderPie();
+                    break;
+                case 'bullet':
+                    chartTemplate += renderBullet();
+                    break;
+                case 'funnel':
+                    chartTemplate += renderFunnel();
                     break;
                 default:
                     chartTemplate += renderBar();
@@ -1015,8 +1231,7 @@
         function positionSegments(canvas, segs) {
             var cw = canvas.clientWidth;
             var ch = canvas.clientHeight;
-            var hasNeg = minValue < 0;
-            var range = hasNeg ? valueRange : maxValue;
+            var range = effectiveRange();
 
             segs.forEach(function (seg) {
                 var si = parseInt(seg.dataset.series, 10);
@@ -1044,8 +1259,7 @@
         }
 
         function positionAreaFills(canvas) {
-            var hasNeg = minValue < 0;
-            var range = hasNeg ? valueRange : maxValue;
+            var range = effectiveRange();
             var fills = canvas.querySelectorAll('.nc-area-fill');
 
             fills.forEach(function (fill) {
@@ -1070,8 +1284,7 @@
             var cw = canvas.clientWidth;
             var ch = canvas.clientHeight;
             if (!cw || !ch) return;
-            var hasNeg = minValue < 0;
-            var range = hasNeg ? valueRange : maxValue;
+            var range = effectiveRange();
 
             dots.forEach(function (dot) {
                 var si = parseInt(dot.dataset.dotSeries, 10);
@@ -1094,21 +1307,29 @@
         function toggleLegend(el) {
             var legend = el.querySelector('.nc-legend');
             if (!legend) return;
-            // Show legend temporarily to measure it
             legend.style.display = '';
             var legendH = legend.offsetHeight;
             var chartH = el.clientHeight;
-            // Hide if legend takes more than a third of the chart
             legend.style.display = legendH > chartH / 3 ? 'none' : '';
         }
 
-        function sizeColumns(canvas) {
-            var children = [];
-            for (var c = 0; c < canvas.children.length; c++) {
-                var ch = canvas.children[c];
-                if (ch.classList.contains('nc-guidelines') || ch.classList.contains('nc-threshold') || ch.classList.contains('nc-baseline')) continue;
-                children.push(ch);
+        function observeResize(callback) {
+            var raf;
+            var debounced = function () {
+                if (raf) cancelAnimationFrame(raf);
+                raf = requestAnimationFrame(callback);
+            };
+            if (typeof ResizeObserver !== 'undefined') {
+                resizeObserver = new ResizeObserver(debounced);
+                resizeObserver.observe(element);
+            } else {
+                resizeHandler = debounced;
+                window.addEventListener('resize', resizeHandler);
             }
+        }
+
+        function sizeColumns(canvas) {
+            var children = getCanvasChildren(canvas);
             var n = children.length;
             if (!n) return;
 
@@ -1171,12 +1392,7 @@
         }
 
         function sizeBars(canvas) {
-            var children = [];
-            for (var c = 0; c < canvas.children.length; c++) {
-                var ch = canvas.children[c];
-                if (ch.classList.contains('nc-guidelines') || ch.classList.contains('nc-threshold')) continue;
-                children.push(ch);
-            }
+            var children = getCanvasChildren(canvas);
             var n = children.length;
             if (!n) return;
 
@@ -1230,6 +1446,7 @@
                     }
                 } else if (type !== 'waterfall') {
                     el.style.left = '0';
+                    el.style.width = '100%';
                 }
 
                 if (yLabels[i]) {
@@ -1284,48 +1501,24 @@
             var colCanvas = element.querySelector('.nc-plot');
             sizeColumns(colCanvas);
 
-            var colResizeRaf;
-            var onColResize = function () {
-                if (colResizeRaf) cancelAnimationFrame(colResizeRaf);
-                colResizeRaf = requestAnimationFrame(function () {
-                    var items = colCanvas.querySelectorAll('.nc-item');
-                    items.forEach(function (el) { el.style.transition = 'none'; });
-                    sizeColumns(colCanvas);
-                    toggleLegend(element);
-                    colCanvas.offsetHeight;
-                    items.forEach(function (el) { el.style.transition = ''; });
-                });
-            };
-
-            if (typeof ResizeObserver !== 'undefined') {
-                resizeObserver = new ResizeObserver(onColResize);
-                resizeObserver.observe(element);
-            } else {
-                resizeHandler = onColResize;
-                window.addEventListener('resize', resizeHandler);
-            }
+            observeResize(function () {
+                var items = colCanvas.querySelectorAll('.nc-item');
+                items.forEach(function (el) { el.style.transition = 'none'; });
+                sizeColumns(colCanvas);
+                toggleLegend(element);
+                colCanvas.offsetHeight;
+                items.forEach(function (el) { el.style.transition = ''; });
+            });
         }
 
         if (type === 'bar' || type === 'waterfall') {
             var barCanvas = element.querySelector('.nc-plot');
             sizeBars(barCanvas);
 
-            var barResizeRaf;
-            var onBarResize = function () {
-                if (barResizeRaf) cancelAnimationFrame(barResizeRaf);
-                barResizeRaf = requestAnimationFrame(function () {
-                    sizeBars(barCanvas);
-                    toggleLegend(element);
-                });
-            };
-
-            if (typeof ResizeObserver !== 'undefined') {
-                resizeObserver = new ResizeObserver(onBarResize);
-                resizeObserver.observe(element);
-            } else {
-                resizeHandler = onBarResize;
-                window.addEventListener('resize', resizeHandler);
-            }
+            observeResize(function () {
+                sizeBars(barCanvas);
+                toggleLegend(element);
+            });
 
             // Sync highlight between plot items and y-axis labels
             if (config.highlight) {
@@ -1411,22 +1604,10 @@
             var treemapPlot = element.querySelector('.nc-plot');
             sizeTreemap(treemapPlot);
 
-            var tmResizeRaf;
-            var onTmResize = function () {
-                if (tmResizeRaf) cancelAnimationFrame(tmResizeRaf);
-                tmResizeRaf = requestAnimationFrame(function () {
-                    sizeTreemap(treemapPlot);
-                    toggleLegend(element);
-                });
-            };
-
-            if (typeof ResizeObserver !== 'undefined') {
-                resizeObserver = new ResizeObserver(onTmResize);
-                resizeObserver.observe(element);
-            } else {
-                resizeHandler = onTmResize;
-                window.addEventListener('resize', resizeHandler);
-            }
+            observeResize(function () {
+                sizeTreemap(treemapPlot);
+                toggleLegend(element);
+            });
         }
 
         if (type === 'line' || type === 'area') {
@@ -1438,31 +1619,19 @@
             positionDots(canvas, dots);
             positionAreaFills(canvas);
 
-            var resizeRaf;
-            var onResize = function () {
-                if (resizeRaf) cancelAnimationFrame(resizeRaf);
-                resizeRaf = requestAnimationFrame(function () {
-                    canvas.style.transition = 'none';
-                    segs.forEach(function (s) { s.style.transition = 'none'; });
-                    dots.forEach(function (d) { d.style.transition = 'none'; });
-                    positionSegments(canvas, segs);
-                    positionDots(canvas, dots);
-                    positionAreaFills(canvas);
-                    toggleLegend(element);
-                    canvas.offsetHeight;
-                    canvas.style.transition = '';
-                    segs.forEach(function (s) { s.style.transition = ''; });
-                    dots.forEach(function (d) { d.style.transition = ''; });
-                });
-            };
-
-            if (typeof ResizeObserver !== 'undefined') {
-                resizeObserver = new ResizeObserver(onResize);
-                resizeObserver.observe(element);
-            } else {
-                resizeHandler = onResize;
-                window.addEventListener('resize', resizeHandler);
-            }
+            observeResize(function () {
+                canvas.style.transition = 'none';
+                segs.forEach(function (s) { s.style.transition = 'none'; });
+                dots.forEach(function (d) { d.style.transition = 'none'; });
+                positionSegments(canvas, segs);
+                positionDots(canvas, dots);
+                positionAreaFills(canvas);
+                toggleLegend(element);
+                canvas.offsetHeight;
+                canvas.style.transition = '';
+                segs.forEach(function (s) { s.style.transition = ''; });
+                dots.forEach(function (d) { d.style.transition = ''; });
+            });
         }
 
         if (type === 'gauge') {
@@ -1507,21 +1676,107 @@
             }
         }
 
+        if (type === 'pie' || type === 'donut') {
+            var pieRing = element.querySelector('.nc-pie-ring');
+            var pieHighlight = element.querySelector('.nc-pie-highlight');
+            var pieTips = element.querySelectorAll('.nc-pie-tip-item');
+            var pieTotal = parseFloat(pieRing.dataset.ncPieTotal);
+
+            // Compute slice boundaries (degrees from 12 o'clock, clockwise)
+            var sliceBounds = [];
+            var pieAngle = 0;
+            var pieSerie = series[0];
+            for (var pi = 0; pi < pieSerie.values.length; pi++) {
+                var sliceDeg = (Math.abs(pieSerie.values[pi]) / pieTotal) * 360;
+                sliceBounds.push({ start: pieAngle, end: pieAngle + sliceDeg });
+                pieAngle += sliceDeg;
+            }
+
+            function getPieSliceIndex(e) {
+                var rect = pieRing.getBoundingClientRect();
+                var cx = rect.left + rect.width / 2;
+                var cy = rect.top + rect.height / 2;
+                var dx = e.clientX - cx;
+                var dy = e.clientY - cy;
+
+                var dist = Math.sqrt(dx * dx + dy * dy);
+                var radius = rect.width / 2;
+                if (dist > radius) return -1;
+
+                var innerR = (type === 'donut') ? (config.pie.innerRadius || 60) : config.pie.innerRadius;
+                if (innerR > 0 && dist < radius * innerR / 100) return -1;
+
+                // Angle from top, clockwise (matching conic-gradient from 0deg)
+                var angleDeg = (Math.atan2(dx, -dy) * 180 / Math.PI + 360) % 360;
+
+                for (var si = 0; si < sliceBounds.length; si++) {
+                    if (angleDeg >= sliceBounds[si].start && angleDeg < sliceBounds[si].end) {
+                        return si;
+                    }
+                }
+                return -1;
+            }
+
+            var activePieTip = -1;
+
+            pieRing.addEventListener('mousemove', function (e) {
+                var idx = getPieSliceIndex(e);
+                if (idx === activePieTip) return;
+                activePieTip = idx;
+                for (var t = 0; t < pieTips.length; t++) {
+                    pieTips[t].style.display = t === idx ? '' : 'none';
+                }
+                // Highlight overlay
+                if (idx >= 0 && pieHighlight) {
+                    var s = sliceBounds[idx];
+                    pieHighlight.style.background = 'conic-gradient(from 0deg, transparent ' + toFixed3(s.start) + 'deg, rgba(255,255,255,0.15) ' + toFixed3(s.start) + 'deg ' + toFixed3(s.end) + 'deg, transparent ' + toFixed3(s.end) + 'deg)';
+                    pieHighlight.style.display = '';
+                } else if (pieHighlight) {
+                    pieHighlight.style.display = 'none';
+                }
+            });
+
+            pieRing.addEventListener('mouseleave', function () {
+                activePieTip = -1;
+                for (var t = 0; t < pieTips.length; t++) {
+                    pieTips[t].style.display = 'none';
+                }
+                if (pieHighlight) pieHighlight.style.display = 'none';
+            });
+
+            function pieEventData(idx) {
+                return { seriesIndex: 0, index: idx, value: pieSerie.values[idx], label: pieSerie.labels[idx], seriesTitle: pieSerie.title, element: pieRing };
+            }
+
+            if (config.onClick) {
+                pieRing.addEventListener('click', function (e) {
+                    var idx = getPieSliceIndex(e);
+                    if (idx >= 0) config.onClick(pieEventData(idx), e);
+                });
+            }
+
+            if (config.onHover) {
+                pieRing.addEventListener('mousemove', function (e) {
+                    var idx = getPieSliceIndex(e);
+                    if (idx >= 0) config.onHover(pieEventData(idx), e);
+                });
+            }
+        }
+
+        if (type === 'bullet') {
+            var bulletCanvas = element.querySelector('.nc-plot');
+            sizeBars(bulletCanvas);
+
+            observeResize(function () {
+                sizeBars(bulletCanvas);
+                toggleLegend(element);
+            });
+        }
+
         // Toggle legend on initial render and set up observer for chart types without one
         toggleLegend(element);
         if (!resizeObserver && !resizeHandler) {
-            var legendRaf;
-            var onLegendResize = function () {
-                if (legendRaf) cancelAnimationFrame(legendRaf);
-                legendRaf = requestAnimationFrame(function () { toggleLegend(element); });
-            };
-            if (typeof ResizeObserver !== 'undefined') {
-                resizeObserver = new ResizeObserver(onLegendResize);
-                resizeObserver.observe(element);
-            } else {
-                resizeHandler = onLegendResize;
-                window.addEventListener('resize', resizeHandler);
-            }
+            observeResize(function () { toggleLegend(element); });
         }
 
         function destroy() {

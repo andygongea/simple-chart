@@ -275,11 +275,95 @@ neoCharts('.chart', {
 });
 ```
 
+### Pie
+
+Circular chart divided into slices proportional to values. Uses conic-gradient for rendering. Supports hover highlighting and tooltips.
+
+```js
+neoCharts('.chart', {
+    type: 'pie',
+    layout: { width: '100%', height: '280px' },
+    data: {
+        series: [{
+            title: 'Market Share',
+            values: [40, 30, 20, 10],
+            labels: ['Chrome', 'Safari', 'Firefox', 'Other'],
+            color: ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6']
+        }]
+    }
+});
+```
+
+### Donut
+
+Same as pie with a configurable inner cutout. Set `pie.innerRadius` to control hole size (default 60% for donut type).
+
+```js
+neoCharts('.chart', {
+    type: 'donut',
+    pie: { innerRadius: 70 },
+    layout: { width: '100%', height: '280px' },
+    data: {
+        series: [{
+            title: 'Status',
+            values: [78, 12, 10],
+            labels: ['Passing', 'Failing', 'Pending'],
+            color: ['#10b981', '#ef4444', '#6b7280'],
+            suffix: '%'
+        }]
+    }
+});
+```
+
+### Bullet
+
+Horizontal bar chart with qualitative ranges and a target marker. Designed for comparing a measured value against a target. Set `bullet.targets` for comparative markers and `bullet.ranges` for background bands (absolute values).
+
+```js
+neoCharts('.chart', {
+    type: 'bullet',
+    bullet: {
+        targets: [90, 85, 95],
+        ranges: [60, 80, 100]
+    },
+    layout: { width: '100%', height: '200px' },
+    data: {
+        series: [{
+            title: 'KPIs',
+            values: [82, 71, 93],
+            labels: ['Revenue', 'Profit', 'Satisfaction'],
+            color: ['#3b82f6', '#f59e0b', '#10b981'],
+            suffix: '%'
+        }]
+    }
+});
+```
+
+### Funnel
+
+Vertical chart with decreasing-width trapezoids. Each level tapers into the next, representing conversion or drop-off stages.
+
+```js
+neoCharts('.chart', {
+    type: 'funnel',
+    layout: { width: '100%', height: '280px' },
+    data: {
+        series: [{
+            title: 'Pipeline',
+            values: [1200, 800, 400, 120],
+            labels: ['Visitors', 'Leads', 'Opportunities', 'Deals'],
+            color: ['#6b7280', '#3b82f6', '#f59e0b', '#10b981'],
+            decimals: 0
+        }]
+    }
+});
+```
+
 ## Options Reference
 
 | Option | Type | Default | Description |
 |---|---|---|---|
-| `type` | string | `'column'` | Chart type: `column`, `bar`, `progress`, `waterfall`, `line`, `area`, `heatmap`, `treemap`, `gauge` |
+| `type` | string | `'column'` | Chart type: `column`, `bar`, `progress`, `waterfall`, `line`, `area`, `heatmap`, `treemap`, `gauge`, `pie`, `donut`, `bullet`, `funnel` |
 | `cssClass` | string | `''` | Additional CSS class on the chart container |
 | `highlight` | boolean | `false` | Dim sibling items on hover (bidirectional for bar/waterfall labels) |
 | `animate` | boolean | `true` | Animate items on initial render |
@@ -290,6 +374,9 @@ neoCharts('.chart', {
 | `theme` | string | `'dark'` | Color theme: `'dark'` or `'light'` |
 | `gauge.thickness` | number | `14` | Gauge ring thickness in pixels |
 | `gauge.valueFontSize` | number | `48` | Gauge value font size in pixels |
+| `pie.innerRadius` | number | `0` | Inner radius as percentage (0 = full pie, 60+ = donut). Auto-set to 60 for `type: 'donut'` |
+| `bullet.targets` | array | `[]` | Target marker values per item (absolute values) |
+| `bullet.ranges` | array | `[]` | Qualitative range boundaries (absolute values). Auto-generated if empty |
 | `title.text` | string | `'Neo Charts'` | Chart title text |
 | `title.subtitle` | string | `''` | Subtitle text below the title |
 | `title.align` | string | `'right'` | Title alignment: `left`, `center`, `right` |
